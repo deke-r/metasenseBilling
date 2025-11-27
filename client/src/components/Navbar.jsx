@@ -15,8 +15,8 @@ const Navbar = () => {
         if (token) {
             const decoded = jwtDecode(token)
             setUserEmail(decoded.email)
-            const name = decoded.email.split('@')[0]
-            setUserName(name.charAt(0).toUpperCase() + name.slice(1))
+    
+            setUserName(decoded.name)
         }
     }, [])
 

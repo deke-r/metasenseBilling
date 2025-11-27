@@ -147,17 +147,17 @@
 .invoicePage {
     width: 210mm;
     min-height: 297mm;
-    padding: 40mm 25mm;
+    padding: 25mm 25mm;
     background: #EDE8E1;
     color: #1f2937;
-    font-family: 'Georgia', serif;
+    font-family: Arial, sans-serif;
 }
 
 .invoiceHeader {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 60px;
+    margin-bottom: 30px;
 }
 
 .logoSection {
@@ -165,25 +165,23 @@
 }
 
 .logo {
-    font-size: 72px;
-    font-weight: 300;
-    font-family: 'Georgia', serif;
-    font-style: italic;
-    color: #1f2937;
+    max-width: 100px;
+    height: auto;
+    object-fit: contain;
 }
 
 .invoiceTitle {
     font-size: 48px;
     font-weight: 400;
     letter-spacing: 2px;
-    font-family: 'Georgia', serif;
+    font-family: Arial, sans-serif;
     color: #1f2937;
 }
 
 .invoiceInfo {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 50px;
+    margin-bottom: 30px;
 }
 
 .billedTo {
@@ -227,7 +225,7 @@
 .itemsTable {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .itemsTable thead {
@@ -235,7 +233,7 @@
 }
 
 .itemsTable th {
-    padding: 12px 8px;
+    padding: 10px 8px;
     text-align: left;
     font-size: 13px;
     font-weight: 600;
@@ -252,38 +250,31 @@
 }
 
 .itemsTable td {
-    padding: 16px 8px;
+    padding: 12px 8px;
     font-size: 14px;
 }
 
 .totalsSection {
     margin-left: auto;
     width: 300px;
-    margin-bottom: 50px;
+    margin-bottom: 30px;
 }
 
 .totalRow {
     display: flex;
     justify-content: space-between;
-    padding: 8px 0;
+    padding: 6px 0;
     font-size: 14px;
 }
 
 .totalRowFinal {
     display: flex;
     justify-content: space-between;
-    padding: 16px 0;
+    padding: 12px 0;
     font-size: 20px;
     font-weight: 700;
     border-top: 1px solid #1f2937;
-    margin-top: 8px;
-}
-
-.thankYou {
-    font-size: 32px;
-    font-weight: 400;
-    margin-bottom: 80px;
-    font-family: 'Georgia', serif;
+    margin-top: 6px;
 }
 
 .invoiceFooter {
@@ -309,20 +300,15 @@
     margin-bottom: 4px;
 }
 
-.sellerInfo {
+.companyInfo {
     text-align: right;
 }
 
-.sellerName {
-    font-size: 28px;
-    font-weight: 400;
-    margin-bottom: 4px;
-    font-family: 'Georgia', serif;
-}
-
-.sellerAddress {
-    font-size: 13px;
-    color: #4b5563;
+.companyName {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    font-family: Arial, sans-serif;
 }
 
 /* Print Styles */
@@ -344,7 +330,7 @@
         width: 100%;
         min-height: 100vh;
         margin: 0;
-        padding: 40mm 25mm;
+        padding: 25mm 25mm;
         page-break-after: avoid;
     }
 

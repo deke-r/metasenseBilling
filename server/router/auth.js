@@ -27,7 +27,7 @@ router.post('/login', async (req, res) => {
 
 
         const token = jwt.sign(
-            { email: rows[0].email, role: rows[0].role },
+            {name: rows[0].name, email: rows[0].email, role: rows[0].role },
             process.env.SECRET_KEY,
             { expiresIn: 60 * 60 }
         );

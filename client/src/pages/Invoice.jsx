@@ -234,7 +234,7 @@ const Invoice = () => {
                                             />
                                         </div>
                                         <div className="col-md-3">
-                                            <label className={styles.formLabel}>Unit Price ($)</label>
+                                            <label className={styles.formLabel}>Unit Price (₹)</label>
                                             <input
                                                 type="number"
                                                 className={styles.formInput}
@@ -270,7 +270,7 @@ const Invoice = () => {
 
                         {/* Tax */}
                         <div className={styles.formSection}>
-                            <h3 className={styles.sectionTitle}>Tax</h3>
+                            <h3 className={styles.sectionTitle}>Gst</h3>
                             <div className="row g-3">
                                 <div className="col-md-4">
                                     <label className={styles.formLabel}>Tax Rate (%)</label>
@@ -390,7 +390,7 @@ const Invoice = () => {
                     {/* Header */}
                     <div className={styles.invoiceHeader}>
                         <div className={styles.logoSection}>
-                            <div className={styles.logo}>&amp;</div>
+                            <img src="/img/logo.png" alt="MetaSense Logo" className={styles.logo} />
                         </div>
                         <div className={styles.invoiceTitle}>INVOICE</div>
                     </div>
@@ -426,8 +426,8 @@ const Invoice = () => {
                                 <tr key={index}>
                                     <td>{item.description || 'Item'}</td>
                                     <td>{item.quantity}</td>
-                                    <td>${item.unitPrice.toFixed(2)}</td>
-                                    <td>${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                    <td>₹{item.unitPrice.toFixed(2)}</td>
+                                    <td>₹{(item.quantity * item.unitPrice).toFixed(2)}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -437,20 +437,17 @@ const Invoice = () => {
                     <div className={styles.totalsSection}>
                         <div className={styles.totalRow}>
                             <span>Subtotal</span>
-                            <span>${calculateSubtotal().toFixed(2)}</span>
+                            <span>₹{calculateSubtotal().toFixed(2)}</span>
                         </div>
                         <div className={styles.totalRow}>
                             <span>Tax ({invoiceData.taxRate}%)</span>
-                            <span>${calculateTax().toFixed(2)}</span>
+                            <span>₹{calculateTax().toFixed(2)}</span>
                         </div>
                         <div className={styles.totalRowFinal}>
                             <span>Total</span>
-                            <span>${calculateTotal().toFixed(2)}</span>
+                            <span>₹{calculateTotal().toFixed(2)}</span>
                         </div>
                     </div>
-
-                    {/* Thank You */}
-                    <div className={styles.thankYou}>Thank you!</div>
 
                     {/* Footer */}
                     <div className={styles.invoiceFooter}>
@@ -463,9 +460,8 @@ const Invoice = () => {
                                 Pay by: {invoiceData.paymentInfo.payBy ? new Date(invoiceData.paymentInfo.payBy).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
                             </div>
                         </div>
-                        <div className={styles.sellerInfo}>
-                            <div className={styles.sellerName}>{invoiceData.sellerName}</div>
-                            <div className={styles.sellerAddress}>{invoiceData.sellerAddress}</div>
+                        <div className={styles.companyInfo}>
+                            <div className={styles.companyName}>MetaSense C/O Sense Project Pvt Ltd</div>
                         </div>
                     </div>
                 </div>
