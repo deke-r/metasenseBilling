@@ -1,0 +1,370 @@
+/* Invoice Container */
+.invoiceContainer {
+    min-height: 100vh;
+    background: #f9fafb;
+}
+
+/* Form Section */
+.formSection {
+    padding: 2rem 0;
+}
+
+.backButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #1f2937;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    transition: color 0.2s;
+}
+
+.backButton:hover {
+    color: #0C4379;
+}
+
+.pageTitle {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 2rem;
+}
+
+.formCard {
+    background: #ffffff;
+    padding: 2rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.sectionTitle {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.formSection {
+    margin-bottom: 2rem;
+}
+
+.formLabel {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.formInput {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #d1d5db;
+    font-size: 0.9rem;
+    color: #1f2937;
+    background: #ffffff;
+    transition: all 0.2s;
+}
+
+.formInput:focus {
+    outline: none;
+    border-color: #0C4379;
+    box-shadow: 0 0 0 3px rgba(12, 67, 121, 0.1);
+}
+
+.itemRow {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.itemRow:last-child {
+    border-bottom: none;
+}
+
+.addItemBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: #f3f4f6;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.addItemBtn:hover {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+.removeBtn {
+    width: 100%;
+    padding: 0.625rem;
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.removeBtn:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
+.generateBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 2rem;
+    background: #1f2937;
+    color: #ffffff;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 1rem;
+}
+
+.generateBtn:hover {
+    background: #0C4379;
+}
+
+/* Invoice Preview - Hidden on screen, visible on print */
+.invoicePreview {
+    display: none;
+}
+
+/* Invoice Page Styles */
+.invoicePage {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 40mm 25mm;
+    background: #EDE8E1;
+    color: #1f2937;
+    font-family: 'Georgia', serif;
+}
+
+.invoiceHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 60px;
+}
+
+.logoSection {
+    flex: 1;
+}
+
+.logo {
+    font-size: 72px;
+    font-weight: 300;
+    font-family: 'Georgia', serif;
+    font-style: italic;
+    color: #1f2937;
+}
+
+.invoiceTitle {
+    font-size: 48px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    font-family: 'Georgia', serif;
+    color: #1f2937;
+}
+
+.invoiceInfo {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 50px;
+}
+
+.billedTo {
+    flex: 1;
+}
+
+.label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    font-family: Arial, sans-serif;
+}
+
+.clientName {
+    font-size: 16px;
+    font-weight: 400;
+    margin-bottom: 4px;
+}
+
+.clientDetails {
+    font-size: 14px;
+    color: #4b5563;
+    margin-bottom: 2px;
+}
+
+.invoiceDetails {
+    text-align: right;
+}
+
+.invoiceNumber {
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.invoiceDate {
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.itemsTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+}
+
+.itemsTable thead {
+    border-bottom: 1px solid #1f2937;
+}
+
+.itemsTable th {
+    padding: 12px 8px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: Arial, sans-serif;
+}
+
+.itemsTable th:last-child,
+.itemsTable td:last-child {
+    text-align: right;
+}
+
+.itemsTable tbody tr {
+    border-bottom: 1px solid #d1d5db;
+}
+
+.itemsTable td {
+    padding: 16px 8px;
+    font-size: 14px;
+}
+
+.totalsSection {
+    margin-left: auto;
+    width: 300px;
+    margin-bottom: 50px;
+}
+
+.totalRow {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 14px;
+}
+
+.totalRowFinal {
+    display: flex;
+    justify-content: space-between;
+    padding: 16px 0;
+    font-size: 20px;
+    font-weight: 700;
+    border-top: 1px solid #1f2937;
+    margin-top: 8px;
+}
+
+.thankYou {
+    font-size: 32px;
+    font-weight: 400;
+    margin-bottom: 80px;
+    font-family: 'Georgia', serif;
+}
+
+.invoiceFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.paymentInfo {
+    flex: 1;
+}
+
+.paymentLabel {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    font-family: Arial, sans-serif;
+}
+
+.paymentDetails {
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.sellerInfo {
+    text-align: right;
+}
+
+.sellerName {
+    font-size: 28px;
+    font-weight: 400;
+    margin-bottom: 4px;
+    font-family: 'Georgia', serif;
+}
+
+.sellerAddress {
+    font-size: 13px;
+    color: #4b5563;
+}
+
+/* Print Styles */
+@media print {
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
+    .formSection {
+        display: none !important;
+    }
+
+    .invoicePreview {
+        display: block !important;
+    }
+
+    .invoicePage {
+        width: 100%;
+        min-height: 100vh;
+        margin: 0;
+        padding: 40mm 25mm;
+        page-break-after: avoid;
+    }
+
+    /* Hide navbar on print */
+    nav {
+        display: none !important;
+    }
+}
+
+/* Responsive adjustments for form */
+@media (max-width: 768px) {
+    .formCard {
+        padding: 1.5rem;
+    }
+
+    .pageTitle {
+        font-size: 1.5rem;
+    }
+
+    .sectionTitle {
+        font-size: 1rem;
+    }
+}
