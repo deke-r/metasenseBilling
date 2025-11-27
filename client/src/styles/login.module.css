@@ -1,0 +1,144 @@
+.loginContainer {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f5f5;
+}
+
+.loginCard {
+    background: white;
+    border-radius: 0;
+    padding: 2.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #d0d0d0;
+    width: 100%;
+    max-width: 420px;
+}
+
+.loginTitle {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #000000;
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+
+.loginSubtitle {
+    color: #666666;
+    text-align: center;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+}
+
+.formGroup {
+    margin-bottom: 1.5rem;
+}
+
+.formLabel {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #000000;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.inputWrapper {
+    position: relative;
+}
+
+.formInput {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #cccccc;
+    border-radius: 0;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    outline: none;
+    background: white;
+    color: #000000;
+}
+
+.formInput:focus {
+    border-color: #000000;
+    box-shadow: none;
+}
+
+.formInput.error {
+    border-color: #000000;
+    background: #f9f9f9;
+}
+
+.formInput.error:focus {
+    box-shadow: none;
+}
+
+.inputIcon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999999;
+    pointer-events: none;
+}
+
+.inputWithIcon {
+    padding-left: 2.75rem;
+}
+
+.eyeButton {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #666666;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+}
+
+.eyeButton:hover {
+    color: #000000;
+}
+
+.errorMessage {
+    color: #000000;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.submitButton {
+    width: 100%;
+    padding: 0.875rem;
+    background: #000000;
+    color: white;
+    border: none;
+    border-radius: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-top: 1rem;
+}
+
+.submitButton:hover {
+    background: #333333;
+}
+
+.submitButton:active {
+    background: #1a1a1a;
+}
+
+.submitButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #000000;
+}
