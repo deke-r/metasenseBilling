@@ -207,12 +207,34 @@
 
 .logoSection {
     flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .logo {
     max-width: 60px;
     height: auto;
     object-fit: contain;
+}
+
+.companyBranding {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.brandName {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    font-family: Arial, sans-serif;
+}
+
+.brandUrl {
+    font-size: 11px;
+    color: #4b5563;
+    font-family: Arial, sans-serif;
 }
 
 .invoiceTitle {
@@ -375,6 +397,37 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
     text-align: right;
+}
+
+.contactFooter {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-top: 30px;
+    padding: 15px 0;
+    border-top: 1px solid #d1d5db;
+    flex-wrap: wrap;
+}
+
+.contactItem {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #1f2937;
+    font-family: Arial, sans-serif;
+    white-space: nowrap;
+}
+
+.contactIcon {
+    font-size: 14px;
+}
+
+.contactIconImg {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
 }
 
 /* Print Styles */

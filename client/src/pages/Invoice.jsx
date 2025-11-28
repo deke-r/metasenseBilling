@@ -22,8 +22,7 @@ const Invoice = () => {
             accountName: '',
             accountNo: '',
             ifscCode: '',
-            branch: '',
-            payBy: ''
+            branch: ''
         },
         sellerName: '',
         regdAddress: '',
@@ -84,8 +83,7 @@ const Invoice = () => {
                         accountName: settings.account_name || '',
                         accountNo: settings.account_number || '',
                         ifscCode: settings.ifsc_code || '',
-                        branch: settings.branch || '',
-                        payBy: prev.paymentInfo.payBy // Keep the date field editable
+                        branch: settings.branch || ''
                     },
                     sellerName: settings.seller_name || '',
                     regdAddress: settings.regd_address || '',
@@ -492,18 +490,7 @@ const Invoice = () => {
                                         style={{ background: '#f9fafb', cursor: 'not-allowed' }}
                                     />
                                 </div>
-                                <div className="col-md-6">
-                                    <label className={styles.formLabel}>Pay By Date</label>
-                                    <input
-                                        type="date"
-                                        className={styles.formInput}
-                                        value={invoiceData.paymentInfo.payBy}
-                                        onChange={(e) => setInvoiceData({
-                                            ...invoiceData,
-                                            paymentInfo: { ...invoiceData.paymentInfo, payBy: e.target.value }
-                                        })}
-                                    />
-                                </div>
+
                             </div>
                         </div>
 
@@ -566,6 +553,10 @@ const Invoice = () => {
                     <div className={styles.invoiceHeader}>
                         <div className={styles.logoSection}>
                             <img src="/img/logo.png" alt="MetaSense Logo" className={styles.logo} />
+                            <div className={styles.companyBranding}>
+                                <div className={styles.brandName}>MetaSense</div>
+
+                            </div>
                         </div>
                         <div className={styles.invoiceTitle}>INVOICE</div>
                     </div>
@@ -636,14 +627,32 @@ const Invoice = () => {
                             <div className={styles.paymentDetails}>Account No.: {invoiceData.paymentInfo.accountNo}</div>
                             <div className={styles.paymentDetails}>IFSC Code: {invoiceData.paymentInfo.ifscCode}</div>
                             <div className={styles.paymentDetails}>Branch: {invoiceData.paymentInfo.branch}</div>
-                            <div className={styles.paymentDetails}>
-                                Pay by: {invoiceData.paymentInfo.payBy ? new Date(invoiceData.paymentInfo.payBy).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
-                            </div>
+
                         </div>
                         <div className={styles.companyInfo}>
                             <div className={styles.companyName}>MetaSense C/o Sense Project Pvt. Ltd.</div>
                             <div className={styles.companyDetails}>Regd Address: {invoiceData.regdAddress}</div>
                             <div className={styles.companyDetails}>Office Address: {invoiceData.offcAddress}</div>
+                        </div>
+                    </div>
+
+                    {/* Contact Footer */}
+                    <div className={styles.contactFooter}>
+                        <div className={styles.contactItem}>
+                            <span className={styles.contactIcon}>📞</span>
+                            <span>+91-9599196874</span>
+                        </div>
+                        <div className={styles.contactItem}>
+                            <span className={styles.contactIcon}>✉️</span>
+                            <span>info@metasense.in</span>
+                        </div>
+                        <div className={styles.contactItem}>
+                            <span className={styles.contactIcon}>🌐</span>
+                            <span>www.metasense.in</span>
+                        </div>
+                        <div className={styles.contactItem}>
+                            <img src="/img/insta.png" alt="Instagram" className={styles.contactIconImg} />
+                            <span>metasensedigital</span>
                         </div>
                     </div>
                 </div>
