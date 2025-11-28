@@ -31,6 +31,15 @@ const initdb = async () => {
 
 initdb()
 
+
+app.get("/test", (req, res) => {
+    res.json({
+        success: true,
+        message: "Backend is running!",
+        time: new Date()
+    });
+});
+
 app.use('/', router);
 app.use('/auth', authRouter);
 app.listen(process.env.PORT, () => {
