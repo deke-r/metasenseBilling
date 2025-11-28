@@ -115,7 +115,10 @@ router.get('/settings/company', verifyToken, async (req, res) => {
 
 // Save invoice and increment counter
 router.post('/invoice/save', verifyToken, async (req, res) => {
+    const connection = await con.getConnection();
     try {
+        await connection.beginTransaction();
+
         const { invoiceData } = req.body;
 
         // Save client details if provided
@@ -130,7 +133,7 @@ router.post('/invoice/save', verifyToken, async (req, res) => {
                     updated_at = CURRENT_TIMESTAMP
             `;
 
-            await con.query(clientQuery, [
+            await connection.query(clientQuery, [
                 invoiceData.clientName.trim(),
                 invoiceData.clientPhone || '',
                 invoiceData.clientAddress || '',
@@ -138,16 +141,154 @@ router.post('/invoice/save', verifyToken, async (req, res) => {
             ]);
         }
 
-        // Update invoice counter
-        await con.query('UPDATE invoice_counter SET current_invoice_no = current_invoice_no + 1 WHERE id = 1');
+        // Calculate totals
+        const subtotal = invoiceData.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+        const taxAmount = (subtotal * invoiceData.taxRate) / 100;
+        const totalAmount = subtotal + taxAmount;
 
-        res.status(200).json({ message: "Invoice saved successfully" });
+        // Insert invoice
+        const invoiceQuery = `
+            INSERT INTO invoices (
+                invoice_no, invoice_date, client_name, client_phone, client_address, client_gst,
+                tax_rate, subtotal, tax_amount, total_amount,
+                seller_name, regd_address, offc_address,
+                payment_bank_name, payment_account_name, payment_account_no, payment_ifsc_code, payment_branch
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        const [invoiceResult] = await connection.query(invoiceQuery, [
+            invoiceData.invoiceNo,
+            invoiceData.invoiceDate,
+            invoiceData.clientName || '',
+            invoiceData.clientPhone || '',
+            invoiceData.clientAddress || '',
+            invoiceData.clientGst || '',
+            invoiceData.taxRate,
+            subtotal,
+            taxAmount,
+            totalAmount,
+            invoiceData.sellerName || '',
+            invoiceData.regdAddress || '',
+            invoiceData.offcAddress || '',
+            invoiceData.paymentInfo.bankName || '',
+            invoiceData.paymentInfo.accountName || '',
+            invoiceData.paymentInfo.accountNo || '',
+            invoiceData.paymentInfo.ifscCode || '',
+            invoiceData.paymentInfo.branch || ''
+        ]);
+
+        const invoiceId = invoiceResult.insertId;
+
+        // Insert invoice items
+        const itemQuery = `
+            INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, line_total, item_order)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `;
+
+        for (let i = 0; i < invoiceData.items.length; i++) {
+            const item = invoiceData.items[i];
+            const lineTotal = item.quantity * item.unitPrice;
+            await connection.query(itemQuery, [
+                invoiceId,
+                item.description || '',
+                item.quantity,
+                item.unitPrice,
+                lineTotal,
+                i + 1
+            ]);
+        }
+
+        // Update invoice counter
+        await connection.query('UPDATE invoice_counter SET current_invoice_no = current_invoice_no + 1 WHERE id = 1');
+
+        await connection.commit();
+        res.status(200).json({ message: "Invoice saved successfully", invoiceId });
     } catch (error) {
+        await connection.rollback();
         console.error('Error saving invoice:', error);
+        res.status(500).json({ message: "Internal server error" });
+    } finally {
+        connection.release();
+    }
+});
+
+// Get all invoices
+router.get('/invoice/all', verifyToken, async (req, res) => {
+    try {
+        const query = `
+            SELECT id, invoice_no, invoice_date, client_name, total_amount, created_at
+            FROM invoices
+            ORDER BY created_at DESC
+        `;
+
+        const [rows] = await con.query(query);
+        res.status(200).json(rows);
+    } catch (error) {
+        console.error('Error fetching invoices:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// Get single invoice by ID
+router.get('/invoice/:id', verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Fetch invoice details
+        const invoiceQuery = `
+            SELECT * FROM invoices WHERE id = ?
+        `;
+        const [invoiceRows] = await con.query(invoiceQuery, [id]);
+
+        if (invoiceRows.length === 0) {
+            return res.status(404).json({ message: "Invoice not found" });
+        }
+
+        const invoice = invoiceRows[0];
+
+        // Fetch invoice items
+        const itemsQuery = `
+            SELECT description, quantity, unit_price, line_total
+            FROM invoice_items
+            WHERE invoice_id = ?
+            ORDER BY item_order ASC
+        `;
+        const [itemsRows] = await con.query(itemsQuery, [id]);
+
+        // Format response to match frontend structure
+        const invoiceData = {
+            invoiceNo: invoice.invoice_no,
+            invoiceDate: invoice.invoice_date,
+            clientName: invoice.client_name,
+            clientPhone: invoice.client_phone,
+            clientAddress: invoice.client_address,
+            clientGst: invoice.client_gst,
+            items: itemsRows.map(item => ({
+                description: item.description,
+                quantity: parseFloat(item.quantity),
+                unitPrice: parseFloat(item.unit_price)
+            })),
+            taxRate: parseFloat(invoice.tax_rate),
+            sellerName: invoice.seller_name,
+            regdAddress: invoice.regd_address,
+            offcAddress: invoice.offc_address,
+            paymentInfo: {
+                bankName: invoice.payment_bank_name,
+                accountName: invoice.payment_account_name,
+                accountNo: invoice.payment_account_no,
+                ifscCode: invoice.payment_ifsc_code,
+                branch: invoice.payment_branch
+            }
+        };
+
+        res.status(200).json(invoiceData);
+    } catch (error) {
+        console.error('Error fetching invoice:', error);
         res.status(500).json({ message: "Internal server error" });
     }
 });
 
 module.exports = router;
+
 
 

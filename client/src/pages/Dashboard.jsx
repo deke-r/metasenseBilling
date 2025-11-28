@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import RecentActivity from '../components/RecentActivity'
 import styles from '../styles/dashboard.module.css'
 import {
     FileText,
@@ -11,16 +13,49 @@ import {
     FileBarChart,
     CreditCard
 } from 'lucide-react'
+import axios from 'axios'
+import toast from 'react-hot-toast'
 
 const Dashboard = () => {
     const navigate = useNavigate()
+    const [recentInvoices, setRecentInvoices] = useState([])
+    const [totalInvoices, setTotalInvoices] = useState(0)
+    const [loading, setLoading] = useState(true)
 
-    // Mock stats data - replace with actual API calls
+    useEffect(() => {
+        fetchDashboardData()
+    }, [])
+
+    const fetchDashboardData = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            const response = await axios.get(
+                `${import.meta.env.VITE_BASE_URL}/invoice/all`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
+            )
+
+            const allInvoices = response.data
+            setTotalInvoices(allInvoices.length)
+            // Get first 5 invoices (API returns sorted by date DESC)
+            setRecentInvoices(allInvoices.slice(0, 5))
+            setLoading(false)
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error)
+            // toast.error('Failed to load dashboard data')
+            setLoading(false)
+        }
+    }
+
+    // Mock stats data - replace with actual API calls where possible
     const stats = [
         {
             label: 'Total Invoices',
-            value: '248',
-            change: '+12% from last month',
+            value: totalInvoices.toString(),
+            change: 'All time',
             positive: true,
             icon: <FileText />,
             color: 'black'
@@ -59,10 +94,10 @@ const Dashboard = () => {
             path: '/invoice/new'
         },
         {
-            title: 'View Reports',
-            description: 'Analytics and insights',
-            icon: <FileBarChart />,
-            path: '/reports'
+            title: 'View Invoices',
+            description: 'View all saved invoices',
+            icon: <FileText />,
+            path: '/view-invoices'
         },
         {
             title: 'Change Password',
@@ -84,7 +119,7 @@ const Dashboard = () => {
 
             <div className={styles.mainContent}>
                 <div className="container">
-                    
+
 
                     {/* Stats Grid */}
                     <div className={styles.statsGrid}>
@@ -125,49 +160,7 @@ const Dashboard = () => {
                     </div>
 
                     {/* Recent Activity Section */}
-                    <div className="mt-5 mb-5">
-                        <h3 className={styles.sectionTitle}>
-                            Recent Activity
-                        </h3>
-                        <div className={styles.activitySection}>
-                            <div className="table-responsive">
-                                <table className="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Invoice #</th>
-                                            <th>Client</th>
-                                            <th>Amount</th>
-                                            <th>Status</th>
-                                            <th>Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><strong>#INV-2024-001</strong></td>
-                                            <td>Acme Corporation</td>
-                                            <td>₹25,000</td>
-                                            <td><span className="badge bg-success">Paid</span></td>
-                                            <td>Nov 25, 2024</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>#INV-2024-002</strong></td>
-                                            <td>Tech Solutions Ltd</td>
-                                            <td>₹18,500</td>
-                                            <td><span className="badge bg-warning">Pending</span></td>
-                                            <td>Nov 26, 2024</td>
-                                        </tr>
-                                        <tr>
-                                            <td><strong>#INV-2024-003</strong></td>
-                                            <td>Digital Innovations</td>
-                                            <td>₹32,750</td>
-                                            <td><span className="badge bg-success">Paid</span></td>
-                                            <td>Nov 27, 2024</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                    <RecentActivity invoices={recentInvoices} loading={loading} />
                 </div>
             </div>
         </div>

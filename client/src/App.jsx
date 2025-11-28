@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Invoice from "./pages/Invoice";
+import ViewInvoices from "./pages/ViewInvoices";
 import ChangePassword from "./pages/ChangePassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -24,6 +25,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <Invoice />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/view-invoices"
+            element={
+              <ProtectedRoute>
+                <ViewInvoices />
               </ProtectedRoute>
             }
           />
