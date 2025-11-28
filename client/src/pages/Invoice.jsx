@@ -652,7 +652,7 @@ const Invoice = () => {
                         </div>
                         <div className={styles.contactItem}>
                             <img src="/img/insta.png" alt="Instagram" className={styles.contactIconImg} />
-                            <span>metasensedigital</span>
+                            <span>@metasensedigital</span>
                         </div>
                     </div>
                 </div>
