@@ -138,6 +138,52 @@
     background: #0C4379;
 }
 
+/* Autocomplete Styles */
+.autocompleteWrapper {
+    position: relative;
+}
+
+.suggestionsList {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 2px;
+}
+
+.suggestionItem {
+    padding: 0.75rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.2s;
+}
+
+.suggestionItem:last-child {
+    border-bottom: none;
+}
+
+.suggestionItem:hover,
+.suggestionItemActive {
+    background: #f3f4f6;
+}
+
+.suggestionName {
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.suggestionDetails {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
 /* Invoice Preview - Hidden on screen, visible on print */
 .invoicePreview {
     display: none;
@@ -146,8 +192,7 @@
 /* Invoice Page Styles */
 .invoicePage {
     width: 210mm;
-    min-height: 297mm;
-    padding: 25mm 25mm;
+    padding: 20mm 25mm;
     background: #EDE8E1;
     color: #1f2937;
     font-family: Arial, sans-serif;
@@ -157,7 +202,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
 .logoSection {
@@ -165,7 +210,7 @@
 }
 
 .logo {
-    max-width: 100px;
+    max-width: 60px;
     height: auto;
     object-fit: contain;
 }
@@ -181,7 +226,7 @@
 .invoiceInfo {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
 .billedTo {
@@ -200,6 +245,7 @@
     font-size: 16px;
     font-weight: 400;
     margin-bottom: 4px;
+    text-transform: capitalize;
 }
 
 .clientDetails {
@@ -225,7 +271,7 @@
 .itemsTable {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .itemsTable thead {
@@ -257,7 +303,7 @@
 .totalsSection {
     margin-left: auto;
     width: 300px;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
 .totalRow {
@@ -280,11 +326,15 @@
 .invoiceFooter {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: flex-start;
+    gap: 30px;
+    page-break-inside: avoid;
+    margin-top: 20px;
 }
 
 .paymentInfo {
-    flex: 1;
+    flex: 0 0 50%;
+    max-width: 50%;
 }
 
 .paymentLabel {
@@ -298,17 +348,33 @@
 .paymentDetails {
     font-size: 13px;
     margin-bottom: 4px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .companyInfo {
+    flex: 0 0 45%;
+    max-width: 45%;
     text-align: right;
 }
 
 .companyName {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 600;
     color: #1f2937;
     font-family: Arial, sans-serif;
+    margin-bottom: 6px;
+    white-space: nowrap;
+}
+
+.companyDetails {
+    font-size: 12px;
+    color: #4b5563;
+    margin-top: 4px;
+    font-family: Arial, sans-serif;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    text-align: right;
 }
 
 /* Print Styles */
@@ -328,10 +394,13 @@
 
     .invoicePage {
         width: 100%;
-        min-height: 100vh;
         margin: 0;
-        padding: 25mm 25mm;
+        padding: 20mm 25mm;
         page-break-after: avoid;
+    }
+
+    .invoiceFooter {
+        page-break-inside: avoid;
     }
 
     /* Hide navbar on print */

@@ -14,18 +14,25 @@ const Invoice = () => {
         clientName: '',
         clientPhone: '',
         clientAddress: '',
+        clientGst: '',
         items: [{ description: '', quantity: 1, unitPrice: 0 }],
-        taxRate: 0,
+        taxRate: 18,
         paymentInfo: {
             bankName: '',
             accountName: '',
             accountNo: '',
+            ifscCode: '',
+            branch: '',
             payBy: ''
         },
         sellerName: '',
-        sellerAddress: ''
+        regdAddress: '',
+        offcAddress: ''
     })
     const [nextInvoiceNumber, setNextInvoiceNumber] = useState(null)
+    const [clientSuggestions, setClientSuggestions] = useState([])
+    const [showSuggestions, setShowSuggestions] = useState(false)
+    const [searchTimeout, setSearchTimeout] = useState(null)
 
     // Fetch next invoice number on component mount
     useEffect(() => {
@@ -53,6 +60,113 @@ const Invoice = () => {
         }
 
         fetchNextInvoiceNumber()
+    }, [])
+
+    // Fetch company settings on component mount
+    useEffect(() => {
+        const fetchCompanySettings = async () => {
+            try {
+                const token = localStorage.getItem('token')
+                const response = await axios.get(
+                    `${import.meta.env.VITE_BASE_URL}/settings/company`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
+                )
+
+                const settings = response.data
+                setInvoiceData(prev => ({
+                    ...prev,
+                    paymentInfo: {
+                        bankName: settings.bank_name || '',
+                        accountName: settings.account_name || '',
+                        accountNo: settings.account_number || '',
+                        ifscCode: settings.ifsc_code || '',
+                        branch: settings.branch || '',
+                        payBy: prev.paymentInfo.payBy // Keep the date field editable
+                    },
+                    sellerName: settings.seller_name || '',
+                    regdAddress: settings.regd_address || '',
+                    offcAddress: settings.offc_address || ''
+                }))
+            } catch (error) {
+                console.error('Error fetching company settings:', error)
+                toast.error('Failed to fetch company settings')
+            }
+        }
+
+        fetchCompanySettings()
+    }, [])
+
+    // Search clients as user types
+    const searchClients = async (query) => {
+        if (!query || query.trim() === '') {
+            setClientSuggestions([])
+            setShowSuggestions(false)
+            return
+        }
+
+        try {
+            const token = localStorage.getItem('token')
+            const response = await axios.get(
+                `${import.meta.env.VITE_BASE_URL}/clients/search?query=${encodeURIComponent(query)}`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
+            )
+
+            setClientSuggestions(response.data)
+            setShowSuggestions(response.data.length > 0)
+        } catch (error) {
+            console.error('Error searching clients:', error)
+        }
+    }
+
+    // Handle client name input change with debounce
+    const handleClientNameChange = (e) => {
+        const value = e.target.value
+        setInvoiceData({ ...invoiceData, clientName: value })
+
+        // Clear existing timeout
+        if (searchTimeout) {
+            clearTimeout(searchTimeout)
+        }
+
+        // Set new timeout for search
+        const timeout = setTimeout(() => {
+            searchClients(value)
+        }, 300) // 300ms debounce
+
+        setSearchTimeout(timeout)
+    }
+
+    // Handle client selection from suggestions
+    const handleClientSelect = (client) => {
+        setInvoiceData({
+            ...invoiceData,
+            clientName: client.name,
+            clientPhone: client.phone || '',
+            clientAddress: client.address || '',
+            clientGst: client.gst || ''
+        })
+        setShowSuggestions(false)
+        setClientSuggestions([])
+    }
+
+    // Close suggestions when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (!event.target.closest(`.${styles.autocompleteWrapper}`)) {
+                setShowSuggestions(false)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
     const addItem = () => {
@@ -176,13 +290,36 @@ const Invoice = () => {
                             <div className="row g-3">
                                 <div className="col-md-6">
                                     <label className={styles.formLabel}>Client Name *</label>
-                                    <input
-                                        type="text"
-                                        className={styles.formInput}
-                                        value={invoiceData.clientName}
-                                        onChange={(e) => setInvoiceData({ ...invoiceData, clientName: e.target.value })}
-                                        placeholder="Imani Olowe"
-                                    />
+                                    <div className={styles.autocompleteWrapper}>
+                                        <input
+                                            type="text"
+                                            className={styles.formInput}
+                                            value={invoiceData.clientName}
+                                            onChange={handleClientNameChange}
+                                            placeholder="Imani Olowe"
+                                            autoComplete="off"
+                                        />
+                                        {showSuggestions && clientSuggestions.length > 0 && (
+                                            <div className={styles.suggestionsList}>
+                                                {clientSuggestions.map((client) => (
+                                                    <div
+                                                        key={client.id}
+                                                        className={styles.suggestionItem}
+                                                        onClick={() => handleClientSelect(client)}
+                                                    >
+                                                        <div className={styles.suggestionName}>{client.name}</div>
+                                                        {(client.phone || client.address) && (
+                                                            <div className={styles.suggestionDetails}>
+                                                                {client.phone && <span>{client.phone}</span>}
+                                                                {client.phone && client.address && <span> • </span>}
+                                                                {client.address && <span>{client.address}</span>}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="col-md-6">
                                     <label className={styles.formLabel}>Phone Number</label>
@@ -202,6 +339,16 @@ const Invoice = () => {
                                         value={invoiceData.clientAddress}
                                         onChange={(e) => setInvoiceData({ ...invoiceData, clientAddress: e.target.value })}
                                         placeholder="63 Ivy Road, Hawkville, GA, USA 31036"
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className={styles.formLabel}>GST</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.clientGst}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, clientGst: e.target.value })}
+                                        placeholder="GST Number"
                                     />
                                 </div>
                             </div>
@@ -234,7 +381,7 @@ const Invoice = () => {
                                             />
                                         </div>
                                         <div className="col-md-3">
-                                            <label className={styles.formLabel}>Unit Price (₹)</label>
+                                            <label className={styles.formLabel}>Unit Price (Rs.)</label>
                                             <input
                                                 type="number"
                                                 className={styles.formInput}
@@ -273,7 +420,7 @@ const Invoice = () => {
                             <h3 className={styles.sectionTitle}>Gst</h3>
                             <div className="row g-3">
                                 <div className="col-md-4">
-                                    <label className={styles.formLabel}>Tax Rate (%)</label>
+                                    <label className={styles.formLabel}>GST (%)</label>
                                     <input
                                         type="number"
                                         className={styles.formInput}
@@ -296,11 +443,9 @@ const Invoice = () => {
                                         type="text"
                                         className={styles.formInput}
                                         value={invoiceData.paymentInfo.bankName}
-                                        onChange={(e) => setInvoiceData({
-                                            ...invoiceData,
-                                            paymentInfo: { ...invoiceData.paymentInfo, bankName: e.target.value }
-                                        })}
-                                        placeholder="Briard Bank"
+                                        readOnly
+                                        placeholder="Loading..."
+                                        style={{ background: '#f9fafb', cursor: 'not-allowed' }}
                                     />
                                 </div>
                                 <div className="col-md-6">
@@ -309,11 +454,9 @@ const Invoice = () => {
                                         type="text"
                                         className={styles.formInput}
                                         value={invoiceData.paymentInfo.accountName}
-                                        onChange={(e) => setInvoiceData({
-                                            ...invoiceData,
-                                            paymentInfo: { ...invoiceData.paymentInfo, accountName: e.target.value }
-                                        })}
-                                        placeholder="Samira Hadid"
+                                        readOnly
+                                        placeholder="Loading..."
+                                        style={{ background: '#f9fafb', cursor: 'not-allowed' }}
                                     />
                                 </div>
                                 <div className="col-md-6">
@@ -322,11 +465,31 @@ const Invoice = () => {
                                         type="text"
                                         className={styles.formInput}
                                         value={invoiceData.paymentInfo.accountNo}
-                                        onChange={(e) => setInvoiceData({
-                                            ...invoiceData,
-                                            paymentInfo: { ...invoiceData.paymentInfo, accountNo: e.target.value }
-                                        })}
-                                        placeholder="123-456-7890"
+                                        readOnly
+                                        placeholder="Loading..."
+                                        style={{ background: '#f9fafb', cursor: 'not-allowed' }}
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className={styles.formLabel}>IFSC Code</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.paymentInfo.ifscCode}
+                                        readOnly
+                                        placeholder="Loading..."
+                                        style={{ background: '#f9fafb', cursor: 'not-allowed' }}
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className={styles.formLabel}>Branch</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.paymentInfo.branch}
+                                        readOnly
+                                        placeholder="Loading..."
+                                        style={{ background: '#f9fafb', cursor: 'not-allowed' }}
                                     />
                                 </div>
                                 <div className="col-md-6">
@@ -354,18 +517,30 @@ const Invoice = () => {
                                         type="text"
                                         className={styles.formInput}
                                         value={invoiceData.sellerName}
-                                        onChange={(e) => setInvoiceData({ ...invoiceData, sellerName: e.target.value })}
-                                        placeholder="Samira Hadid"
+                                        readOnly
+                                        placeholder="Loading..."
+                                        style={{ background: '#f9fafb', cursor: 'not-allowed' }}
                                     />
                                 </div>
                                 <div className="col-md-6">
-                                    <label className={styles.formLabel}>Seller Address</label>
+                                    <label className={styles.formLabel}>Regd Address</label>
                                     <input
                                         type="text"
                                         className={styles.formInput}
-                                        value={invoiceData.sellerAddress}
-                                        onChange={(e) => setInvoiceData({ ...invoiceData, sellerAddress: e.target.value })}
-                                        placeholder="123 Anywhere St., Any City, ST 12345"
+                                        value={invoiceData.regdAddress}
+                                        readOnly
+                                        placeholder="Loading..."
+                                        style={{ background: '#f9fafb', cursor: 'not-allowed' }}
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className={styles.formLabel}>Offc Add</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.offcAddress}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, offcAddress: e.target.value })}
+                                        placeholder="Office Address"
                                     />
                                 </div>
                             </div>
@@ -402,6 +577,9 @@ const Invoice = () => {
                             <div className={styles.clientName}>{invoiceData.clientName || 'Client Name'}</div>
                             <div className={styles.clientDetails}>{invoiceData.clientPhone}</div>
                             <div className={styles.clientDetails}>{invoiceData.clientAddress}</div>
+                            {invoiceData.clientGst && (
+                                <div className={styles.clientDetails}>GST: {invoiceData.clientGst}</div>
+                            )}
                         </div>
                         <div className={styles.invoiceDetails}>
                             <div className={styles.invoiceNumber}>Invoice No. {invoiceData.invoiceNo || '00000'}</div>
@@ -426,8 +604,8 @@ const Invoice = () => {
                                 <tr key={index}>
                                     <td>{item.description || 'Item'}</td>
                                     <td>{item.quantity}</td>
-                                    <td>₹{item.unitPrice.toFixed(2)}</td>
-                                    <td>₹{(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                    <td>Rs.{item.unitPrice.toFixed(2)}</td>
+                                    <td>Rs.{(item.quantity * item.unitPrice).toFixed(2)}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -437,15 +615,15 @@ const Invoice = () => {
                     <div className={styles.totalsSection}>
                         <div className={styles.totalRow}>
                             <span>Subtotal</span>
-                            <span>₹{calculateSubtotal().toFixed(2)}</span>
+                            <span>Rs.{calculateSubtotal().toFixed(2)}</span>
                         </div>
                         <div className={styles.totalRow}>
-                            <span>Tax ({invoiceData.taxRate}%)</span>
-                            <span>₹{calculateTax().toFixed(2)}</span>
+                            <span>GST ({invoiceData.taxRate}%)</span>
+                            <span>Rs.{calculateTax().toFixed(2)}</span>
                         </div>
                         <div className={styles.totalRowFinal}>
                             <span>Total</span>
-                            <span>₹{calculateTotal().toFixed(2)}</span>
+                            <span>Rs.{calculateTotal().toFixed(2)}</span>
                         </div>
                     </div>
 
@@ -456,12 +634,16 @@ const Invoice = () => {
                             <div className={styles.paymentDetails}>{invoiceData.paymentInfo.bankName}</div>
                             <div className={styles.paymentDetails}>Account Name: {invoiceData.paymentInfo.accountName}</div>
                             <div className={styles.paymentDetails}>Account No.: {invoiceData.paymentInfo.accountNo}</div>
+                            <div className={styles.paymentDetails}>IFSC Code: {invoiceData.paymentInfo.ifscCode}</div>
+                            <div className={styles.paymentDetails}>Branch: {invoiceData.paymentInfo.branch}</div>
                             <div className={styles.paymentDetails}>
                                 Pay by: {invoiceData.paymentInfo.payBy ? new Date(invoiceData.paymentInfo.payBy).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : ''}
                             </div>
                         </div>
                         <div className={styles.companyInfo}>
-                            <div className={styles.companyName}>MetaSense C/O Sense Project Pvt Ltd</div>
+                            <div className={styles.companyName}>MetaSense C/o Sense Project Pvt. Ltd.</div>
+                            <div className={styles.companyDetails}>Regd Address: {invoiceData.regdAddress}</div>
+                            <div className={styles.companyDetails}>Office Address: {invoiceData.offcAddress}</div>
                         </div>
                     </div>
                 </div>
