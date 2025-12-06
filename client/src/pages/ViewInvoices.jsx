@@ -165,6 +165,10 @@ const ViewInvoices = () => {
                             <div className={invoiceStyles.companyName}>MetaSense C/o Sense Project Pvt. Ltd.</div>
                             <div className={invoiceStyles.companyDetails}>Regd Address: {selectedInvoice.regdAddress}</div>
                             <div className={invoiceStyles.companyDetails}>Office Address: {selectedInvoice.offcAddress}</div>
+                            <div className={invoiceStyles.stampWrapper}>
+                                <img src="/img/stamp.png" alt="Stamp" className={invoiceStyles.stamp} />
+                                <img src="/img/signature.png" alt="Signature" className={invoiceStyles.signature} />
+                            </div>
                         </div>
                     </div>
 

@@ -633,6 +633,10 @@ const Invoice = () => {
                             <div className={styles.companyName}>MetaSense C/o Sense Project Pvt. Ltd.</div>
                             <div className={styles.companyDetails}>Regd Address: {invoiceData.regdAddress}</div>
                             <div className={styles.companyDetails}>Office Address: {invoiceData.offcAddress}</div>
+                            <div className={styles.stampWrapper}>
+                                <img src="/img/stamp.png" alt="Stamp" className={styles.stamp} />
+                                <img src="/img/signature.png" alt="Signature" className={styles.signature} />
+                            </div>
                         </div>
                     </div>
 

@@ -8,19 +8,21 @@ router.post('/login', async (req, res) => {
     try {
 
 
+        console.log(req.body)
+
         const { email, password } = req.body;
 
 
 
         const qry = 'SELECT * FROM users WHERE email=? and status =?';
         const [rows] = await con.query(qry, [email, 1])
-
+        console.log(rows)
         if (rows.length === 0) {
             return res.status(401).json({ message: "Invalid email or password" })
         }
 
         const validPassword = await bcrypt.compare(password, rows[0].pass);
-
+        console.log(validPassword)
         if (!validPassword) {
             return res.status(401).json({ message: "Invalid email or password" })
         }

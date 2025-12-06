@@ -399,6 +399,36 @@
     text-align: right;
 }
 
+.stampWrapper {
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    height: 100px;
+    /* Adjust based on image size */
+    width: 100%;
+}
+
+.stamp {
+    height: 100px;
+    width: auto;
+    object-fit: contain;
+    opacity: 0.8;
+}
+
+.signature {
+    position: absolute;
+    right: 20px;
+    /* Adjust to center over stamp */
+    bottom: 10px;
+    /* Adjust to center over stamp */
+    height: 60px;
+    /* Adjust based on signature size relative to stamp */
+    width: auto;
+    object-fit: contain;
+    z-index: 1;
+}
+
 .contactFooter {
     display: flex;
     justify-content: center;
