@@ -296,8 +296,8 @@ const ViewInvoices = () => {
                                                         <td className='border-bottom-0' style={{ width: '50%' }}>Dated</td>
                                                     </tr>
                                                     <tr>
-                                                        <td><strong>{selectedInvoice.invoiceNo || 'N/A'}</strong></td>
-                                                        <td><strong>{selectedInvoice.invoiceDate ? new Date(selectedInvoice.invoiceDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</strong></td>
+                                                        <td><span className={invoiceStyles.semiBold}>{selectedInvoice.invoiceNo || 'N/A'}</span></td>
+                                                        <td><span className={invoiceStyles.semiBold}>{selectedInvoice.invoiceDate ? new Date(selectedInvoice.invoiceDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span></td>
                                                     </tr>
                                                     <tr>
                                                         <td className='border-bottom-0'>Delivery Note</td>
@@ -391,26 +391,28 @@ const ViewInvoices = () => {
                                 <tbody>
                                     {selectedInvoice.items.map((item, index) => (
                                         <tr key={index}>
-                                            <td style={{ textAlign: 'center' }}>{index + 1}</td>
-                                            <td style={{ textAlign: 'left' }}>{item.description || 'Item'}</td>
-                                            <td style={{ textAlign: 'center' }}>{item.hsnSac || ''}</td>
-                                            <td style={{ textAlign: 'center' }}>{item.quantity}</td>
-                                            <td style={{ textAlign: 'right' }}>{item.unitPrice.toFixed(2)}</td>
-                                            <td style={{ textAlign: 'center' }}>{item.perUnit}</td>
-                                            <td style={{ textAlign: 'right' }}>{(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                            <td className='border-bottom-0 border-top-0' style={{ textAlign: 'center' }}>{index + 1}</td>
+                                            <td className='border-bottom-0 border-top-0' style={{ textAlign: 'left' }}>{item.description || 'Item'}</td>
+                                            <td className='border-bottom-0 border-top-0' style={{ textAlign: 'center' }}>{item.hsnSac || ''}</td>
+                                            <td className='border-bottom-0 border-top-0' style={{ textAlign: 'center' }}>{item.quantity}</td>
+                                            <td className='border-bottom-0 border-top-0' style={{ textAlign: 'right' }}>{item.unitPrice.toFixed(2)}</td>
+                                            <td className='border-bottom-0 border-top-0' style={{ textAlign: 'center' }}>{item.perUnit}</td>
+                                            <td className='border-bottom-0 border-top-0' style={{ textAlign: 'right' }}>{(item.quantity * item.unitPrice).toFixed(2)}</td>
                                         </tr>
                                     ))}
                                     <tr>
-                                        <td colSpan="2" style={{ textAlign: 'right', fontStyle: 'italic' }}>OUTPUT IGST </td>
-                                        <td></td>
-                                        <td></td>
-                                        <td className='text-end'> {selectedInvoice.taxRate}%</td>
-                                        <td></td>
-                                        <td style={{ textAlign: 'right' }}>{calculateTax(selectedInvoice.items, selectedInvoice.taxRate).toFixed(2)}</td>
+                                        <td className='border-top-0'></td>
+                                        <td colSpan="" className='border-top-0' style={{ textAlign: 'right', fontStyle: 'italic' }}>OUTPUT IGST </td>
+                                        <td className='border-top-0'></td>
+                                        <td className='border-top-0'></td>
+                                        <td className='text-end border-top-0'> {selectedInvoice.taxRate}%</td>
+                                        <td className='border-top-0'></td>
+                                        <td className='border-top-0' style={{ textAlign: 'right' }}>{calculateTax(selectedInvoice.items, selectedInvoice.taxRate).toFixed(2)}</td>
                                     </tr>
 
                                     <tr className={invoiceStyles.totalRow}>
-                                        <td colSpan="2" className='text-end'><strong>Total</strong></td>
+                                        <td></td>
+                                        <td colSpan="" className='text-end'><strong>Total</strong></td>
                                         <td></td>
                                         <td style={{ textAlign: 'center' }}><strong>{selectedInvoice.items.reduce((sum, item) => sum + item.quantity, 0)}</strong></td>
                                         <td colSpan=""></td>
@@ -420,7 +422,7 @@ const ViewInvoices = () => {
                                     <tr>
                                         <td colSpan="7">
                                             <div className={invoiceStyles.amountLabel}>Amount Chargeable (in words)</div>
-                                            <div className={invoiceStyles.amountText}><strong>INR {numberToWords(calculateTotal(selectedInvoice.items, selectedInvoice.taxRate))}</strong></div>
+                                            <div className={invoiceStyles.amountText}><span className={invoiceStyles.semiBold}>INR {numberToWords(calculateTotal(selectedInvoice.items, selectedInvoice.taxRate))}</span></div>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -460,7 +462,7 @@ const ViewInvoices = () => {
                                     <tr>
                                         <td colSpan="5" className='border-bottom-0'>
                                             <span className={` ${invoiceStyles.taxAmountLabel}  border-bottom-0`}>Tax Amount (in words) : </span>
-                                            <span className={` ${invoiceStyles.taxAmountText} border-bottom-0`}><strong>INR {numberToWords(calculateTax(selectedInvoice.items, selectedInvoice.taxRate))}</strong></span>
+                                            <span className={` ${invoiceStyles.taxAmountText} border-bottom-0`}><span className={invoiceStyles.semiBold}>INR {numberToWords(calculateTax(selectedInvoice.items, selectedInvoice.taxRate))}</span></span>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -478,10 +480,10 @@ const ViewInvoices = () => {
                                         </td>
                                         <td style={{ width: '50%', verticalAlign: 'top', textAlign: 'right' }} className=''>
                                             <div className={invoiceStyles.forCompany}>for {selectedInvoice.sellerName || 'Sense Projects Private Limited'}</div>
-                                            <div className={invoiceStyles.signatureArea}>
+                                            {/* <div className={invoiceStyles.signatureArea}>
                                                 <img src="/img/signature.png" alt="Signature" className={invoiceStyles.signatureImg} />
                                                 <img src="/img/stamp.png" alt="Stamp" className={invoiceStyles.stampImg} />
-                                            </div>
+                                            </div> */}
                                             <div className={invoiceStyles.authorizedSignatory}>Authorised Signatory</div>
                                         </td>
                                     </tr>

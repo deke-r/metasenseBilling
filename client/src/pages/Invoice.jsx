@@ -968,8 +968,8 @@ const Invoice = () => {
                                                     <td className='border-bottom-0' style={{ width: '50%' }}>Dated</td>
                                                 </tr>
                                                 <tr>
-                                                    <td><strong>{invoiceData.invoiceNo || 'N/A'}</strong></td>
-                                                    <td><strong>{invoiceData.invoiceDate ? new Date(invoiceData.invoiceDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</strong></td>
+                                                    <td><span className={styles.semiBold}>{invoiceData.invoiceNo || 'N/A'}</span></td>
+                                                    <td><span className={styles.semiBold}>{invoiceData.invoiceDate ? new Date(invoiceData.invoiceDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</span></td>
                                                 </tr>
                                                 <tr>
                                                     <td className='border-bottom-0'>Delivery Note</td>
@@ -1092,7 +1092,7 @@ const Invoice = () => {
                                 <tr>
                                     <td colSpan="7">
                                         <div className={styles.amountLabel}>Amount Chargeable (in words)</div>
-                                        <div className={styles.amountText}><strong>INR {numberToWords(calculateTotal())}</strong></div>
+                                        <div className={styles.amountText}><span className={styles.semiBold}>INR {numberToWords(calculateTotal())}</span></div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -1132,7 +1132,7 @@ const Invoice = () => {
                                 <tr>
                                     <td colSpan="5" className='border-bottom-0'>
                                         <span className={` ${styles.taxAmountLabel}  border-bottom-0`}>Tax Amount (in words) : </span>
-                                        <span className={` ${styles.taxAmountText} border-bottom-0`}><strong>INR {numberToWords(calculateTax())}</strong></span>
+                                        <span className={` ${styles.taxAmountText} border-bottom-0`}><span className={styles.semiBold}>INR {numberToWords(calculateTax())}</span></span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -1150,10 +1150,10 @@ const Invoice = () => {
                                     </td>
                                     <td style={{ width: '50%', verticalAlign: 'top', textAlign: 'right' }} className=''>
                                         <div className={styles.forCompany}>for {invoiceData.sellerName || 'Sense Projects Private Limited'}</div>
-                                        <div className={styles.signatureArea}>
+                                        {/* <div className={styles.signatureArea}>
                                             <img src="/img/signature.png" alt="Signature" className={styles.signatureImg} />
                                             <img src="/img/stamp.png" alt="Stamp" className={styles.stampImg} />
-                                        </div>
+                                        </div> */}
                                         <div className={styles.authorizedSignatory}>Authorised Signatory</div>
                                     </td>
                                 </tr>
