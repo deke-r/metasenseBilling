@@ -70,24 +70,24 @@ const ViewInvoices = () => {
 
         return {
             irn: data.irn || '',
-            askNo: data.ask_no || '',
-            askDate: data.ask_date || '',
-            invoiceNo: data.invoice_no || '',
-            invoiceDate: data.invoice_date || '',
+            askNo: data.askNo || data.ask_no || '',
+            askDate: data.askDate || data.ask_date || '',
+            invoiceNo: data.invoiceNo || data.invoice_no || '',
+            invoiceDate: data.invoiceDate || data.invoice_date || '',
 
             // Client/Buyer
-            clientName: data.client_name || '',
-            clientAddress: data.client_address || '',
-            buyerGstin: data.buyer_gstin || data.client_gst || '',
-            buyerStateName: data.buyer_state_name || '',
-            buyerStateCode: data.buyer_state_code || '',
+            clientName: data.clientName || data.client_name || '',
+            clientAddress: data.clientAddress || data.client_address || '',
+            buyerGstin: data.buyerGstin || data.clientGst || data.buyer_gstin || data.client_gst || '',
+            buyerStateName: data.buyerStateName || data.buyer_state_name || '',
+            buyerStateCode: data.buyerStateCode || data.buyer_state_code || '',
 
             // Consignee
-            consigneeName: data.consignee_name || data.client_name || '',
-            consigneeAddress: data.consignee_address || data.client_address || '',
-            consigneeGstin: data.consignee_gstin || data.buyer_gstin || '',
-            consigneeStateName: data.consignee_state_name || data.buyer_state_name || '',
-            consigneeStateCode: data.consignee_state_code || data.buyer_state_code || '',
+            consigneeName: data.consigneeName || data.consignee_name || data.clientName || data.client_name || '',
+            consigneeAddress: data.consigneeAddress || data.consignee_address || data.clientAddress || data.client_address || '',
+            consigneeGstin: data.consigneeGstin || data.consignee_gstin || data.buyerGstin || data.buyer_gstin || '',
+            consigneeStateName: data.consigneeStateName || data.consignee_state_name || data.buyerStateName || data.buyer_state_name || '',
+            consigneeStateCode: data.consigneeStateCode || data.consignee_state_code || data.buyerStateCode || data.buyer_state_code || '',
 
             items: items.map(item => ({
                 description: item.description || '',
@@ -96,29 +96,29 @@ const ViewInvoices = () => {
                 unitPrice: parseFloat(item.unitPrice) || parseFloat(item.unit_price) || 0,
                 perUnit: item.perUnit || item.per_unit || 'Nos'
             })),
-            taxRate: parseFloat(data.tax_rate) || 18,
+            taxRate: parseFloat(data.taxRate || data.tax_rate) || 18,
 
             // Seller
-            sellerName: data.seller_name || 'Sense Projects Pvt Ltd',
-            sellerGstin: data.seller_gstin || '07AAPCS9265G1ZH',
-            sellerStateName: data.seller_state_name || 'Delhi',
-            sellerStateCode: data.seller_state_code || '07',
-            sellerEmail: data.seller_email || 'info@senseprojects.in',
-            regdAddress: data.regd_address || 'Regd Address',
-            offcAddress: data.offc_address || 'Office Address',
+            sellerName: (data.sellerName || data.seller_name) === 'Meta Sense' ? 'Sense Projects Private Limited' : (data.sellerName || data.seller_name || 'Sense Projects Private Limited'),
+            sellerGstin: data.sellerGstin || data.seller_gstin || '07AAPCS9265G1ZH',
+            sellerStateName: data.sellerStateName || data.seller_state_name || 'Delhi',
+            sellerStateCode: data.sellerStateCode || data.seller_state_code || '07',
+            sellerEmail: data.sellerEmail || data.seller_email || 'info@senseprojects.in',
+            regdAddress: data.regdAddress || data.regd_address || 'Regd Address',
+            offcAddress: data.offcAddress || data.offc_address || 'Office Address',
 
             // Delivery & Others
-            deliveryNote: data.delivery_note || '',
-            modeTermsOfPayment: data.mode_terms_payment || '',
-            referenceNoDate: data.reference_no_date || '',
-            otherReferences: data.other_references || '',
-            buyersOrderNo: data.buyers_order_no || '',
-            buyersOrderDate: data.buyers_order_date || '',
-            dispatchDocNo: data.dispatch_doc_no || '',
-            deliveryNoteDate: data.delivery_note_date || '',
-            dispatchedThrough: data.dispatched_through || '',
+            deliveryNote: data.deliveryNote || data.delivery_note || '',
+            modeTermsOfPayment: data.modeTermsOfPayment || data.mode_terms_payment || '',
+            referenceNoDate: data.referenceNoDate || data.reference_no_date || '',
+            otherReferences: data.otherReferences || data.other_references || '',
+            buyersOrderNo: data.buyersOrderNo || data.buyers_order_no || '',
+            buyersOrderDate: data.buyersOrderDate || data.buyers_order_date || '',
+            dispatchDocNo: data.dispatchDocNo || data.dispatch_doc_no || '',
+            deliveryNoteDate: data.deliveryNoteDate || data.delivery_note_date || '',
+            dispatchedThrough: data.dispatchedThrough || data.dispatched_through || '',
             destination: data.destination || '',
-            termsOfDelivery: data.terms_of_delivery || ''
+            termsOfDelivery: data.termsOfDelivery || data.terms_of_delivery || ''
         }
     }
 
@@ -460,7 +460,7 @@ const ViewInvoices = () => {
                                     <tr>
                                         <td colSpan="5" className='border-bottom-0'>
                                             <span className={` ${invoiceStyles.taxAmountLabel}  border-bottom-0`}>Tax Amount (in words) : </span>
-                                            <span className={` ${invoiceStyles.taxAmountText} border-bottom-0`}><strong>{numberToWords(calculateTax(selectedInvoice.items, selectedInvoice.taxRate))}</strong></span>
+                                            <span className={` ${invoiceStyles.taxAmountText} border-bottom-0`}><strong>INR {numberToWords(calculateTax(selectedInvoice.items, selectedInvoice.taxRate))}</strong></span>
                                         </td>
                                     </tr>
                                 </tbody>

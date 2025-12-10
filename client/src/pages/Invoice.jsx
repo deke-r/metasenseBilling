@@ -129,7 +129,7 @@ const Invoice = () => {
                         ifscCode: settings.ifsc_code || '',
                         branch: settings.branch || ''
                     },
-                    sellerName: settings.seller_name || '',
+                    sellerName: (settings.seller_name === 'Meta Sense' ? 'Sense Projects Private Limited' : settings.seller_name) || '',
                     regdAddress: settings.regd_address || '',
                     offcAddress: settings.offc_address || ''
                 }))
@@ -1132,7 +1132,7 @@ const Invoice = () => {
                                 <tr>
                                     <td colSpan="5" className='border-bottom-0'>
                                         <span className={` ${styles.taxAmountLabel}  border-bottom-0`}>Tax Amount (in words) : </span>
-                                        <span className={` ${styles.taxAmountText} border-bottom-0`}><strong>{numberToWords(calculateTax())}</strong></span>
+                                        <span className={` ${styles.taxAmountText} border-bottom-0`}><strong>INR {numberToWords(calculateTax())}</strong></span>
                                     </td>
                                 </tr>
                             </tbody>
