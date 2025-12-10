@@ -207,7 +207,7 @@
     align-items: flex-start;
     margin-bottom: 4px;
     padding-bottom: 4px;
-    border-bottom: 0.8px solid #000;
+    /* border-bottom: 0.8px solid #000; */
 }
 
 .irnSection {
@@ -504,7 +504,7 @@
     text-align: center;
     margin-top: 4px;
     padding-top: 4px;
-    border-top: 0.8px solid #000;
+    /* border-top: 0.8px solid #000; */
     font-size: 7pt;
     font-style: italic;
 }

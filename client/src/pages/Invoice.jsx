@@ -1074,8 +1074,8 @@ const Invoice = () => {
                                     </tr>
                                 ))}
                                 <tr>
-                                    <td colSpan="6" style={{ textAlign: 'right', fontStyle: 'italic' }}>OUTPUT IGST</td>
-                                    <td style={{ textAlign: 'right' }}>{invoiceData.taxRate} %</td>
+                                    <td colSpan="6" style={{ textAlign: 'right', fontStyle: 'italic' }}>OUTPUT IGST @ {invoiceData.taxRate}%</td>
+                                    <td style={{ textAlign: 'right' }}>{calculateTax().toFixed(2)}</td>
                                 </tr>
                                 <tr style={{ height: '35px' }}>
                                     <td colSpan="7"></td>
