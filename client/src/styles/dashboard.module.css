@@ -33,7 +33,7 @@
 }
 
 .logoutBtn {
-    background: #1f2937;
+    background: #0C4379;
     border: none;
     color: white;
     padding: 0.5rem 1.25rem;
@@ -43,7 +43,7 @@
 }
 
 .logoutBtn:hover {
-    background: #374151;
+    background: #0a3661;
     color: white;
 }
 
@@ -246,7 +246,7 @@
 }
 
 .activitySection .bg-success {
-    background-color: #1f2937 !important;
+    background-color: #0C4379 !important;
 }
 
 .activitySection .bg-warning {

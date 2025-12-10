@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Eye } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -6,6 +6,7 @@ import styles from '../styles/viewinvoices.module.css'
 import invoiceStyles from '../styles/invoice.module.css'
 import toast, { Toaster } from 'react-hot-toast'
 import axios from 'axios'
+import QRCode from 'qrcode'
 
 const ViewInvoices = () => {
     const navigate = useNavigate()
@@ -13,10 +14,26 @@ const ViewInvoices = () => {
     const [loading, setLoading] = useState(true)
     const [selectedInvoice, setSelectedInvoice] = useState(null)
     const [showPrintView, setShowPrintView] = useState(false)
+    const [qrCodeDataUrl, setQrCodeDataUrl] = useState('')
 
     useEffect(() => {
         fetchInvoices()
     }, [])
+
+    // Generate QR code when invoice is selected
+    useEffect(() => {
+        if (selectedInvoice && selectedInvoice.irn && selectedInvoice.irn.trim() !== '') {
+            QRCode.toDataURL(selectedInvoice.irn, { width: 150, margin: 1 })
+                .then(url => {
+                    setQrCodeDataUrl(url)
+                })
+                .catch(err => {
+                    console.error('Error generating QR code:', err)
+                })
+        } else {
+            setQrCodeDataUrl('')
+        }
+    }, [selectedInvoice])
 
     const fetchInvoices = async () => {
         try {
@@ -76,123 +93,269 @@ const ViewInvoices = () => {
         return calculateSubtotal(items) + calculateTax(items, taxRate)
     }
 
-    const formatDate = (dateString) => {
-        const date = new Date(dateString)
-        return date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+    // Convert number to words (Indian numbering system)
+    const numberToWords = (num) => {
+        const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine']
+        const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+        const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
+
+        if (num === 0) return 'Zero'
+
+        const numToWords = (n) => {
+            if (n < 10) return ones[n]
+            if (n < 20) return teens[n - 10]
+            if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + ones[n % 10] : '')
+            if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' ' + numToWords(n % 100) : '')
+            if (n < 100000) return numToWords(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 !== 0 ? ' ' + numToWords(n % 1000) : '')
+            if (n < 10000000) return numToWords(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 !== 0 ? ' ' + numToWords(n % 100000) : '')
+            return numToWords(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 !== 0 ? ' ' + numToWords(n % 10000000) : '')
+        }
+
+        const rupees = Math.floor(num)
+        return 'INR ' + numToWords(rupees) + ' Only'
     }
 
     if (showPrintView && selectedInvoice) {
         return (
             <div className={invoiceStyles.invoicePreview} style={{ display: 'block' }}>
-                <div className={invoiceStyles.invoicePage}>
-                    {/* Header */}
-                    <div className={invoiceStyles.invoiceHeader}>
-                        <div className={invoiceStyles.logoSection}>
-                            <img src="/img/logo.png" alt="MetaSense Logo" className={invoiceStyles.logo} />
-                            <div className={invoiceStyles.companyBranding}>
-                                <div className={invoiceStyles.brandName}>MetaSense</div>
+                <div className={invoiceStyles.taxInvoicePage}>
+                    {/* Header with IRN and QR Code */}
+                    <div className={invoiceStyles.taxInvoiceHeader}>
+                        <div className={invoiceStyles.irnSection}>
+                            <div className={invoiceStyles.irnLabel}>IRN</div>
+                            <div className={invoiceStyles.irnValue}>{selectedInvoice.irn || 'N/A'}</div>
+                            <div className={invoiceStyles.askDetails}>
+                                <div>Ask No. : {selectedInvoice.askNo || 'N/A'}</div>
+                                <div>Ask Date : {selectedInvoice.askDate ? new Date(selectedInvoice.askDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</div>
                             </div>
                         </div>
-                        <div className={invoiceStyles.invoiceTitle}>INVOICE</div>
-                    </div>
-
-                    {/* Client and Invoice Info */}
-                    <div className={invoiceStyles.invoiceInfo}>
-                        <div className={invoiceStyles.billedTo}>
-                            <div className={invoiceStyles.label}>BILLED TO:</div>
-                            <div className={invoiceStyles.clientName}>{selectedInvoice.clientName}</div>
-                            <div className={invoiceStyles.clientDetails}>{selectedInvoice.clientPhone}</div>
-                            <div className={invoiceStyles.clientDetails}>{selectedInvoice.clientAddress}</div>
-                            {selectedInvoice.clientGst && (
-                                <div className={invoiceStyles.clientDetails}>GST: {selectedInvoice.clientGst}</div>
+                        <div className={invoiceStyles.titleSection}>
+                            <h1 className={invoiceStyles.taxInvoiceTitle}>Tax Invoice</h1>
+                        </div>
+                        <div className={invoiceStyles.qrSection}>
+                            <div className={invoiceStyles.eInvoiceLabel}>e-Invoice</div>
+                            {qrCodeDataUrl && (
+                                <img src={qrCodeDataUrl} alt="QR Code" className={invoiceStyles.qrCode} />
                             )}
                         </div>
-                        <div className={invoiceStyles.invoiceDetails}>
-                            <div className={invoiceStyles.invoiceNumber}>Invoice No. {selectedInvoice.invoiceNo}</div>
-                            <div className={invoiceStyles.invoiceDate}>{formatDate(selectedInvoice.invoiceDate)}</div>
-                        </div>
                     </div>
 
-                    {/* Items Table */}
-                    <table className={invoiceStyles.itemsTable}>
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th>Quantity</th>
-                                <th>Unit Price</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {selectedInvoice.items.map((item, index) => (
-                                <tr key={index}>
-                                    <td>{item.description}</td>
-                                    <td>{item.quantity}</td>
-                                    <td>Rs.{item.unitPrice.toFixed(2)}</td>
-                                    <td>Rs.{(item.quantity * item.unitPrice).toFixed(2)}</td>
+                    {/* Main Invoice Table */}
+                    <div className={invoiceStyles.taxInvoiceBody}>
+                        <table className={invoiceStyles.mainInvoiceTable}>
+                            <tbody>
+                                {/* Seller and Invoice Details Row */}
+                                <tr>
+                                    <td style={{ width: '50%', verticalAlign: 'top' }}>
+                                        <div className={invoiceStyles.companyName}>{selectedInvoice.sellerName || 'Sense Projects Private Limited'}</div>
+                                        <div>{selectedInvoice.regdAddress || 'Address'}</div>
+                                        <div>GSTIN/UIN : {selectedInvoice.sellerGstin || 'N/A'}</div>
+                                        <div>State Name : {selectedInvoice.sellerStateName || 'Delhi'}, Code : {selectedInvoice.sellerStateCode || '07'}</div>
+                                        <div>E-Mail : {selectedInvoice.sellerEmail || 'info@senseprojects.in'}</div>
+                                    </td>
+                                    <td style={{ width: '50%', padding: 0, verticalAlign: 'top', height: '1px' }} rowSpan="3">
+                                        <table className={invoiceStyles.nestedTable}>
+                                            <tbody>
+                                                <tr>
+                                                    <td style={{ width: '50%' }}>Invoice No.</td>
+                                                    <td style={{ width: '50%' }}>Dated</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>{selectedInvoice.invoiceNo || 'N/A'}</strong></td>
+                                                    <td><strong>{selectedInvoice.invoiceDate ? new Date(selectedInvoice.invoiceDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</strong></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Delivery Note</td>
+                                                    <td>Mode/Terms of Payment</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{selectedInvoice.deliveryNote || ''}</td>
+                                                    <td>{selectedInvoice.modeTermsOfPayment || ''}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Reference No. & Date.</td>
+                                                    <td>Other References</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{selectedInvoice.referenceNoDate || ''}</td>
+                                                    <td>{selectedInvoice.otherReferences || ''}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Buyer's Order No.</td>
+                                                    <td>Dated</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{selectedInvoice.buyersOrderNo || ''}</td>
+                                                    <td>{selectedInvoice.buyersOrderDate ? new Date(selectedInvoice.buyersOrderDate).toLocaleDateString('en-GB').replace(/\//g, '-') : ''}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Dispatch Doc No.</td>
+                                                    <td>Delivery Note Date</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{selectedInvoice.dispatchDocNo || ''}</td>
+                                                    <td>{selectedInvoice.deliveryNoteDate ? new Date(selectedInvoice.deliveryNoteDate).toLocaleDateString('en-GB').replace(/\//g, '-') : ''}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Dispatched through</td>
+                                                    <td>Destination</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{selectedInvoice.dispatchedThrough || ''}</td>
+                                                    <td>{selectedInvoice.destination || ''}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td colSpan="2">Terms of Delivery</td>
+                                                </tr>
+                                                <tr>
+                                                    <td colSpan="2" style={{ height: '48px' }}>{selectedInvoice.termsOfDelivery || ''}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
 
-                    {/* Totals */}
-                    <div className={invoiceStyles.totalsSection}>
-                        <div className={invoiceStyles.totalRow}>
-                            <span>Subtotal</span>
-                            <span>Rs.{calculateSubtotal(selectedInvoice.items).toFixed(2)}</span>
-                        </div>
-                        <div className={invoiceStyles.totalRow}>
-                            <span>GST ({selectedInvoice.taxRate}%)</span>
-                            <span>Rs.{calculateTax(selectedInvoice.items, selectedInvoice.taxRate).toFixed(2)}</span>
-                        </div>
-                        <div className={invoiceStyles.totalRowFinal}>
-                            <span>Total</span>
-                            <span>Rs.{calculateTotal(selectedInvoice.items, selectedInvoice.taxRate).toFixed(2)}</span>
-                        </div>
-                    </div>
+                                {/* Consignee Row - LEFT COLUMN ONLY */}
+                                <tr>
+                                    <td style={{ verticalAlign: 'top' }}>
+                                        <div className={invoiceStyles.sectionLabel}>Consignee (Ship to)</div>
+                                        <div className={invoiceStyles.consigneeName}>{selectedInvoice.consigneeName || selectedInvoice.clientName || 'Consignee Name'}</div>
+                                        <div>{selectedInvoice.consigneeAddress || selectedInvoice.clientAddress || 'Address'}</div>
+                                        <div>GSTIN/UIN : {selectedInvoice.consigneeGstin || selectedInvoice.buyerGstin || 'N/A'}</div>
+                                        <div>State Name : {selectedInvoice.consigneeStateName || selectedInvoice.buyerStateName || 'N/A'}, Code : {selectedInvoice.consigneeStateCode || selectedInvoice.buyerStateCode || 'N/A'}</div>
+                                    </td>
+                                </tr>
 
-                    {/* Footer */}
-                    <div className={invoiceStyles.invoiceFooter}>
-                        <div className={invoiceStyles.paymentInfo}>
-                            <div className={invoiceStyles.paymentLabel}>PAYMENT INFORMATION</div>
-                            <div className={invoiceStyles.paymentDetails}>{selectedInvoice.paymentInfo.bankName}</div>
-                            <div className={invoiceStyles.paymentDetails}>Account Name: {selectedInvoice.paymentInfo.accountName}</div>
-                            <div className={invoiceStyles.paymentDetails}>Account No.: {selectedInvoice.paymentInfo.accountNo}</div>
-                            <div className={invoiceStyles.paymentDetails}>IFSC Code: {selectedInvoice.paymentInfo.ifscCode}</div>
-                            <div className={invoiceStyles.paymentDetails}>Branch: {selectedInvoice.paymentInfo.branch}</div>
-                        </div>
-                        <div className={invoiceStyles.companyInfo}>
-                            <div className={invoiceStyles.companyName}>MetaSense C/o Sense Project Pvt. Ltd.</div>
-                            <div className={invoiceStyles.companyDetails}>Regd Address: {selectedInvoice.regdAddress}</div>
-                            <div className={invoiceStyles.companyDetails}>Office Address: {selectedInvoice.offcAddress}</div>
-                            <div className={invoiceStyles.stampWrapper}>
-                                <img src="/img/stamp.png" alt="Stamp" className={invoiceStyles.stamp} />
-                                <img src="/img/signature.png" alt="Signature" className={invoiceStyles.signature} />
-                            </div>
-                        </div>
-                    </div>
+                                {/* Buyer Row - LEFT COLUMN ONLY */}
+                                <tr>
+                                    <td style={{ verticalAlign: 'top' }}>
+                                        <div className={invoiceStyles.sectionLabel}>Buyer (Bill to)</div>
+                                        <div className={invoiceStyles.buyerName}>{selectedInvoice.clientName || 'Buyer Name'}</div>
+                                        <div>{selectedInvoice.clientAddress || 'Address'}</div>
+                                        <div>GSTIN/UIN : {selectedInvoice.buyerGstin || 'N/A'}</div>
+                                        <div>State Name : {selectedInvoice.buyerStateName || 'N/A'}, Code : {selectedInvoice.buyerStateCode || 'N/A'}</div>
+                                    </td>
+                                </tr>
 
-                    {/* Contact Footer */}
-                    <div className={invoiceStyles.contactFooter}>
-                        <div className={invoiceStyles.contactItem}>
-                            <span className={invoiceStyles.contactIcon}>📞</span>
-                            <span>+91-9599196874</span>
-                        </div>
-                        <div className={invoiceStyles.contactItem}>
-                            <span className={invoiceStyles.contactIcon}>✉️</span>
-                            <span>info@metasense.in</span>
-                        </div>
-                        <div className={invoiceStyles.contactItem}>
-                            <span className={invoiceStyles.contactIcon}>🌐</span>
-                            <span>www.metasense.in</span>
-                        </div>
-                        <div className={invoiceStyles.contactItem}>
-                            <img src="/img/insta.png" alt="Instagram" className={invoiceStyles.contactIconImg} />
-                            <span>@metasensedigital</span>
+                            </tbody>
+                        </table>
+
+                        {/* Items Table */}
+                        <table className={invoiceStyles.mainInvoiceTable}>
+                            <thead>
+                                <tr>
+                                    <th style={{ width: '4%', textAlign: 'center' }}>Sl<br />No.</th>
+                                    <th style={{ width: '40%', textAlign: 'center' }}>Description of Services</th>
+                                    <th style={{ width: '10%', textAlign: 'center' }}>HSN/SAC</th>
+                                    <th style={{ width: '10%', textAlign: 'center' }}>Quantity</th>
+                                    <th style={{ width: '12%', textAlign: 'center' }}>Rate</th>
+                                    <th style={{ width: '8%', textAlign: 'center' }}>per</th>
+                                    <th style={{ width: '16%', textAlign: 'center' }}>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {selectedInvoice.items.map((item, index) => (
+                                    <tr key={index}>
+                                        <td style={{ textAlign: 'center' }}>{index + 1}</td>
+                                        <td style={{ textAlign: 'left' }}>{item.description || 'Item'}</td>
+                                        <td style={{ textAlign: 'center' }}>{item.hsnSac || ''}</td>
+                                        <td style={{ textAlign: 'center' }}>{item.quantity}</td>
+                                        <td style={{ textAlign: 'right' }}>{item.unitPrice.toFixed(2)}</td>
+                                        <td style={{ textAlign: 'center' }}>{item.perUnit}</td>
+                                        <td style={{ textAlign: 'right' }}>{(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                    </tr>
+                                ))}
+                                <tr>
+                                    <td colSpan="6" style={{ textAlign: 'right', fontStyle: 'italic' }}>OUTPUT IGST</td>
+                                    <td style={{ textAlign: 'right' }}>{selectedInvoice.taxRate} %</td>
+                                </tr>
+                                <tr style={{ height: '35px' }}>
+                                    <td colSpan="7"></td>
+                                </tr>
+                                <tr className={invoiceStyles.totalRow}>
+                                    <td colSpan="3"><strong>Total</strong></td>
+                                    <td style={{ textAlign: 'center' }}><strong>{selectedInvoice.items.reduce((sum, item) => sum + item.quantity, 0)}</strong></td>
+                                    <td colSpan="2"></td>
+                                    <td style={{ textAlign: 'right' }}><strong>₹ {calculateTotal(selectedInvoice.items, selectedInvoice.taxRate).toFixed(2)}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colSpan="7">
+                                        <div className={invoiceStyles.amountLabel}>Amount Chargeable (in words)</div>
+                                        <div className={invoiceStyles.amountText}><strong>{numberToWords(calculateTotal(selectedInvoice.items, selectedInvoice.taxRate))}</strong></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        {/* HSN Summary Table */}
+                        <table className={invoiceStyles.mainInvoiceTable}>
+                            <thead>
+                                <tr>
+                                    <th rowSpan="2" style={{ verticalAlign: 'middle' }}>HSN/SAC</th>
+                                    <th rowSpan="2" style={{ verticalAlign: 'middle' }}>Taxable<br />Value</th>
+                                    <th colSpan="2">IGST</th>
+                                    <th rowSpan="2" style={{ verticalAlign: 'middle' }}>Total<br />Tax Amount</th>
+                                </tr>
+                                <tr>
+                                    <th>Rate</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {selectedInvoice.items.map((item, index) => (
+                                    <tr key={index}>
+                                        <td style={{ textAlign: 'center' }}>{item.hsnSac || 'N/A'}</td>
+                                        <td style={{ textAlign: 'right' }}>{(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                        <td style={{ textAlign: 'center' }}>{selectedInvoice.taxRate}%</td>
+                                        <td style={{ textAlign: 'right' }}>{((item.quantity * item.unitPrice * selectedInvoice.taxRate) / 100).toFixed(2)}</td>
+                                        <td style={{ textAlign: 'right' }}>{((item.quantity * item.unitPrice * selectedInvoice.taxRate) / 100).toFixed(2)}</td>
+                                    </tr>
+                                ))}
+                                <tr className={invoiceStyles.totalRow}>
+                                    <td><strong>Total</strong></td>
+                                    <td style={{ textAlign: 'right' }}><strong>{calculateSubtotal(selectedInvoice.items).toFixed(2)}</strong></td>
+                                    <td></td>
+                                    <td style={{ textAlign: 'right' }}><strong>{calculateTax(selectedInvoice.items, selectedInvoice.taxRate).toFixed(2)}</strong></td>
+                                    <td style={{ textAlign: 'right' }}><strong>{calculateTax(selectedInvoice.items, selectedInvoice.taxRate).toFixed(2)}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colSpan="5">
+                                        <span className={invoiceStyles.taxAmountLabel}>Tax Amount (in words) : </span>
+                                        <span className={invoiceStyles.taxAmountText}><strong>{numberToWords(calculateTax(selectedInvoice.items, selectedInvoice.taxRate))}</strong></span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        {/* Declaration and Signature */}
+                        <table className={invoiceStyles.mainInvoiceTable}>
+                            <tbody>
+                                <tr>
+                                    <td style={{ width: '50%', verticalAlign: 'top' }}>
+                                        <div className={invoiceStyles.declarationTitle}>Declaration</div>
+                                        <div className={invoiceStyles.declarationText}>
+                                            We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.
+                                        </div>
+                                    </td>
+                                    <td style={{ width: '50%', verticalAlign: 'top', textAlign: 'right' }}>
+                                        <div className={invoiceStyles.forCompany}>for {selectedInvoice.sellerName || 'Sense Projects Private Limited'}</div>
+                                        <div className={invoiceStyles.signatureArea}>
+                                            <img src="/img/signature.png" alt="Signature" className={invoiceStyles.signatureImg} />
+                                            <img src="/img/stamp.png" alt="Stamp" className={invoiceStyles.stampImg} />
+                                        </div>
+                                        <div className={invoiceStyles.authorizedSignatory}>Authorised Signatory</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        {/* Footer */}
+                        <div className={invoiceStyles.taxInvoiceFooter}>
+                            This is a Computer Generated Invoice
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
         )
     }
 

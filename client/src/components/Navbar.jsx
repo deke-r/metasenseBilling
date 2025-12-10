@@ -30,7 +30,7 @@ const Navbar = () => {
             <div className="container">
                 <div className="d-flex justify-content-between align-items-center">
                     <div>
-                        <img src="/img/logo.png" alt="logo" width={40} />
+                        <img src="/img/logo.png" alt="logo" width={120} />
                     </div>
                     <div className="d-flex align-items-center gap-3">
                         <div className="text-end d-none d-md-block">

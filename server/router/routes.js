@@ -31,8 +31,26 @@ router.get('/invoice/next-number', verifyToken, async (req, res) => {
         }
 
         const nextNumber = rows[0].current_invoice_no + 1;
-        const prefix = rows[0].prefix || 'INV';
-        const invoiceNo = `${prefix}-${String(nextNumber).padStart(5, '0')}`;
+        const prefix = rows[0].prefix || 'SPPL';
+
+        // Calculate financial year (April to March)
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth() + 1; // JavaScript months are 0-indexed
+
+        let financialYearStart, financialYearEnd;
+        if (currentMonth >= 4) {
+            // April onwards: current year to next year
+            financialYearStart = currentYear;
+            financialYearEnd = currentYear + 1;
+        } else {
+            // January to March: previous year to current year
+            financialYearStart = currentYear - 1;
+            financialYearEnd = currentYear;
+        }
+
+        const financialYear = `${String(financialYearStart).slice(-2)}-${String(financialYearEnd).slice(-2)}`;
+        const invoiceNo = `${prefix}/${financialYear}/${String(nextNumber).padStart(4, '0')}`;
 
         res.status(200).json({ invoiceNo, nextNumber });
     } catch (error) {
@@ -44,7 +62,7 @@ router.get('/invoice/next-number', verifyToken, async (req, res) => {
 // Save or update client details
 router.post('/clients/save', verifyToken, async (req, res) => {
     try {
-        const { name, phone, address, gst } = req.body;
+        const { name, phone, address, gst, state_name, state_code } = req.body;
 
         if (!name || name.trim() === '') {
             return res.status(400).json({ message: "Client name is required" });
@@ -52,16 +70,18 @@ router.post('/clients/save', verifyToken, async (req, res) => {
 
         // Insert or update client using ON DUPLICATE KEY UPDATE
         const query = `
-            INSERT INTO clients (name, phone, address, gst) 
-            VALUES (?, ?, ?, ?) 
+            INSERT INTO clients (name, phone, address, gst, state_name, state_code) 
+            VALUES (?, ?, ?, ?, ?, ?) 
             ON DUPLICATE KEY UPDATE 
                 phone = VALUES(phone), 
                 address = VALUES(address),
                 gst = VALUES(gst),
+                state_name = VALUES(state_name),
+                state_code = VALUES(state_code),
                 updated_at = CURRENT_TIMESTAMP
         `;
 
-        await con.query(query, [name.trim(), phone || '', address || '', gst || '']);
+        await con.query(query, [name.trim(), phone || '', address || '', gst || '', state_name || '', state_code || '']);
 
         res.status(200).json({ message: "Client saved successfully" });
     } catch (error) {
@@ -81,7 +101,7 @@ router.get('/clients/search', verifyToken, async (req, res) => {
 
         // Search for clients with names matching the query
         const searchQuery = `
-            SELECT id, name, phone, address, gst 
+            SELECT id, name, phone, address, gst, state_name, state_code 
             FROM clients 
             WHERE name LIKE ? 
             ORDER BY name ASC 
@@ -124,12 +144,14 @@ router.post('/invoice/save', verifyToken, async (req, res) => {
         // Save client details if provided
         if (invoiceData.clientName && invoiceData.clientName.trim() !== '') {
             const clientQuery = `
-                INSERT INTO clients (name, phone, address, gst) 
-                VALUES (?, ?, ?, ?) 
+                INSERT INTO clients (name, phone, address, gst, state_name, state_code) 
+                VALUES (?, ?, ?, ?, ?, ?) 
                 ON DUPLICATE KEY UPDATE 
                     phone = VALUES(phone), 
                     address = VALUES(address),
                     gst = VALUES(gst),
+                    state_name = VALUES(state_name),
+                    state_code = VALUES(state_code),
                     updated_at = CURRENT_TIMESTAMP
             `;
 
@@ -137,7 +159,9 @@ router.post('/invoice/save', verifyToken, async (req, res) => {
                 invoiceData.clientName.trim(),
                 invoiceData.clientPhone || '',
                 invoiceData.clientAddress || '',
-                invoiceData.clientGst || ''
+                invoiceData.clientGst || '',
+                invoiceData.buyerStateName || '',
+                invoiceData.buyerStateCode || ''
             ]);
         }
 
@@ -146,30 +170,63 @@ router.post('/invoice/save', verifyToken, async (req, res) => {
         const taxAmount = (subtotal * invoiceData.taxRate) / 100;
         const totalAmount = subtotal + taxAmount;
 
-        // Insert invoice
+        // Insert invoice with all new fields
         const invoiceQuery = `
             INSERT INTO invoices (
-                invoice_no, invoice_date, client_name, client_phone, client_address, client_gst,
+                irn, invoice_no, ask_no, ask_date, invoice_date,
+                client_name, client_phone, client_address, client_gst,
+                buyer_gstin, buyer_state_name, buyer_state_code,
+                consignee_name, consignee_address, consignee_gstin, consignee_state_name, consignee_state_code,
                 tax_rate, subtotal, tax_amount, total_amount,
-                seller_name, regd_address, offc_address,
+                seller_name, seller_gstin, seller_state_name, seller_state_code, seller_email,
+                regd_address, offc_address,
+                delivery_note, mode_terms_of_payment, reference_no_date, other_references,
+                buyers_order_no, buyers_order_date, dispatch_doc_no, delivery_note_date,
+                dispatched_through, destination, terms_of_delivery,
                 payment_bank_name, payment_account_name, payment_account_no, payment_ifsc_code, payment_branch
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         const [invoiceResult] = await connection.query(invoiceQuery, [
+            invoiceData.irn || '',
             invoiceData.invoiceNo,
+            invoiceData.askNo || '',
+            invoiceData.askDate || null,
             invoiceData.invoiceDate,
             invoiceData.clientName || '',
             invoiceData.clientPhone || '',
             invoiceData.clientAddress || '',
             invoiceData.clientGst || '',
+            invoiceData.buyerGstin || '',
+            invoiceData.buyerStateName || '',
+            invoiceData.buyerStateCode || '',
+            invoiceData.consigneeName || '',
+            invoiceData.consigneeAddress || '',
+            invoiceData.consigneeGstin || '',
+            invoiceData.consigneeStateName || '',
+            invoiceData.consigneeStateCode || '',
             invoiceData.taxRate,
             subtotal,
             taxAmount,
             totalAmount,
             invoiceData.sellerName || '',
+            invoiceData.sellerGstin || '',
+            invoiceData.sellerStateName || '',
+            invoiceData.sellerStateCode || '',
+            invoiceData.sellerEmail || '',
             invoiceData.regdAddress || '',
             invoiceData.offcAddress || '',
+            invoiceData.deliveryNote || '',
+            invoiceData.modeTermsOfPayment || '',
+            invoiceData.referenceNoDate || '',
+            invoiceData.otherReferences || '',
+            invoiceData.buyersOrderNo || '',
+            invoiceData.buyersOrderDate || null,
+            invoiceData.dispatchDocNo || '',
+            invoiceData.deliveryNoteDate || null,
+            invoiceData.dispatchedThrough || '',
+            invoiceData.destination || '',
+            invoiceData.termsOfDelivery || '',
             invoiceData.paymentInfo.bankName || '',
             invoiceData.paymentInfo.accountName || '',
             invoiceData.paymentInfo.accountNo || '',
@@ -179,10 +236,10 @@ router.post('/invoice/save', verifyToken, async (req, res) => {
 
         const invoiceId = invoiceResult.insertId;
 
-        // Insert invoice items
+        // Insert invoice items with HSN/SAC and per_unit
         const itemQuery = `
-            INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, line_total, item_order)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO invoice_items (invoice_id, description, hsn_sac, quantity, unit_price, per_unit, line_total, item_order)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         for (let i = 0; i < invoiceData.items.length; i++) {
@@ -191,8 +248,10 @@ router.post('/invoice/save', verifyToken, async (req, res) => {
             await connection.query(itemQuery, [
                 invoiceId,
                 item.description || '',
+                item.hsnSac || '',
                 item.quantity,
                 item.unitPrice,
+                item.perUnit || 'piece',
                 lineTotal,
                 i + 1
             ]);
@@ -246,9 +305,9 @@ router.get('/invoice/:id', verifyToken, async (req, res) => {
 
         const invoice = invoiceRows[0];
 
-        // Fetch invoice items
+        // Fetch invoice items with HSN/SAC and per_unit
         const itemsQuery = `
-            SELECT description, quantity, unit_price, line_total
+            SELECT description, hsn_sac, quantity, unit_price, per_unit, line_total
             FROM invoice_items
             WHERE invoice_id = ?
             ORDER BY item_order ASC
@@ -257,21 +316,65 @@ router.get('/invoice/:id', verifyToken, async (req, res) => {
 
         // Format response to match frontend structure
         const invoiceData = {
+            // IRN and Ask details
+            irn: invoice.irn || '',
+            askNo: invoice.ask_no || '',
+            askDate: invoice.ask_date || '',
+
+            // Invoice details
             invoiceNo: invoice.invoice_no,
             invoiceDate: invoice.invoice_date,
+
+            // Client/Buyer details
             clientName: invoice.client_name,
             clientPhone: invoice.client_phone,
             clientAddress: invoice.client_address,
             clientGst: invoice.client_gst,
+            buyerGstin: invoice.buyer_gstin || '',
+            buyerStateName: invoice.buyer_state_name || '',
+            buyerStateCode: invoice.buyer_state_code || '',
+
+            // Consignee details
+            consigneeName: invoice.consignee_name || '',
+            consigneeAddress: invoice.consignee_address || '',
+            consigneeGstin: invoice.consignee_gstin || '',
+            consigneeStateName: invoice.consignee_state_name || '',
+            consigneeStateCode: invoice.consignee_state_code || '',
+
+            // Items with HSN/SAC
             items: itemsRows.map(item => ({
                 description: item.description,
+                hsnSac: item.hsn_sac || '',
                 quantity: parseFloat(item.quantity),
-                unitPrice: parseFloat(item.unit_price)
+                unitPrice: parseFloat(item.unit_price),
+                perUnit: item.per_unit || 'piece'
             })),
+
             taxRate: parseFloat(invoice.tax_rate),
+
+            // Seller details
             sellerName: invoice.seller_name,
+            sellerGstin: invoice.seller_gstin || '',
+            sellerStateName: invoice.seller_state_name || '',
+            sellerStateCode: invoice.seller_state_code || '',
+            sellerEmail: invoice.seller_email || '',
             regdAddress: invoice.regd_address,
             offcAddress: invoice.offc_address,
+
+            // Delivery and shipping details
+            deliveryNote: invoice.delivery_note || '',
+            modeTermsOfPayment: invoice.mode_terms_of_payment || '',
+            referenceNoDate: invoice.reference_no_date || '',
+            otherReferences: invoice.other_references || '',
+            buyersOrderNo: invoice.buyers_order_no || '',
+            buyersOrderDate: invoice.buyers_order_date || '',
+            dispatchDocNo: invoice.dispatch_doc_no || '',
+            deliveryNoteDate: invoice.delivery_note_date || '',
+            dispatchedThrough: invoice.dispatched_through || '',
+            destination: invoice.destination || '',
+            termsOfDelivery: invoice.terms_of_delivery || '',
+
+            // Payment info
             paymentInfo: {
                 bankName: invoice.payment_bank_name,
                 accountName: invoice.payment_account_name,

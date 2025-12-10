@@ -118,7 +118,7 @@
 .submitButton {
     width: 100%;
     padding: 0.875rem;
-    background: #000000;
+    background: #0C4379;
     color: white;
     border: none;
     border-radius: 0;
@@ -130,15 +130,15 @@
 }
 
 .submitButton:hover {
-    background: #333333;
+    background: #0a3661;
 }
 
 .submitButton:active {
-    background: #1a1a1a;
+    background: #082a4d;
 }
 
 .submitButton:disabled {
     opacity: 0.6;
     cursor: not-allowed;
-    background: #000000;
+    background: #0C4379;
 }

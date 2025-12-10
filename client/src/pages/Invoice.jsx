@@ -1,37 +1,81 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Plus, Trash2, Printer } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import styles from '../styles/invoice.module.css'
 import toast, { Toaster } from 'react-hot-toast'
 import axios from 'axios'
+import QRCode from 'qrcode'
 
 const Invoice = () => {
     const navigate = useNavigate()
+    const qrCanvasRef = useRef(null)
     const [invoiceData, setInvoiceData] = useState({
+        // IRN and Ask details
+        irn: '',
+        askNo: '',
+        askDate: '',
+
+        // Invoice details
         invoiceNo: '',
         invoiceDate: new Date().toISOString().split('T')[0],
+
+        // Client/Buyer details
         clientName: '',
         clientPhone: '',
         clientAddress: '',
         clientGst: '',
-        items: [{ description: '', quantity: 1, unitPrice: 0 }],
+        buyerGstin: '',
+        buyerStateName: '',
+        buyerStateCode: '',
+
+        // Consignee details
+        consigneeName: '',
+        consigneeAddress: '',
+        consigneeGstin: '',
+        consigneeStateName: '',
+        consigneeStateCode: '',
+
+        // Items
+        items: [{ description: '', hsnSac: '', quantity: 1, unitPrice: 0, perUnit: 'ton' }],
         taxRate: 18,
+
+        // Seller details
+        sellerName: '',
+        sellerGstin: '',
+        sellerStateName: '',
+        sellerStateCode: '',
+        sellerEmail: '',
+        regdAddress: '',
+        offcAddress: '',
+
+        // Delivery and shipping details
+        deliveryNote: '',
+        modeTermsOfPayment: '',
+        referenceNoDate: '',
+        otherReferences: '',
+        buyersOrderNo: '',
+        buyersOrderDate: '',
+        dispatchDocNo: '',
+        deliveryNoteDate: '',
+        dispatchedThrough: '',
+        destination: '',
+        termsOfDelivery: '',
+
+        // Payment info
         paymentInfo: {
             bankName: '',
             accountName: '',
             accountNo: '',
             ifscCode: '',
             branch: ''
-        },
-        sellerName: '',
-        regdAddress: '',
-        offcAddress: ''
+        }
     })
     const [nextInvoiceNumber, setNextInvoiceNumber] = useState(null)
     const [clientSuggestions, setClientSuggestions] = useState([])
     const [showSuggestions, setShowSuggestions] = useState(false)
     const [searchTimeout, setSearchTimeout] = useState(null)
+    const [qrCodeDataUrl, setQrCodeDataUrl] = useState('')
 
     // Fetch next invoice number on component mount
     useEffect(() => {
@@ -98,6 +142,21 @@ const Invoice = () => {
         fetchCompanySettings()
     }, [])
 
+    // Generate QR code when IRN changes
+    useEffect(() => {
+        if (invoiceData.irn && invoiceData.irn.trim() !== '') {
+            QRCode.toDataURL(invoiceData.irn, { width: 150, margin: 1 })
+                .then(url => {
+                    setQrCodeDataUrl(url)
+                })
+                .catch(err => {
+                    console.error('Error generating QR code:', err)
+                })
+        } else {
+            setQrCodeDataUrl('')
+        }
+    }, [invoiceData.irn])
+
     // Search clients as user types
     const searchClients = async (query) => {
         if (!query || query.trim() === '') {
@@ -149,7 +208,10 @@ const Invoice = () => {
             clientName: client.name,
             clientPhone: client.phone || '',
             clientAddress: client.address || '',
-            clientGst: client.gst || ''
+            clientGst: client.gst || '',
+            buyerGstin: client.gst || '',
+            buyerStateName: client.state_name || '',
+            buyerStateCode: client.state_code || ''
         })
         setShowSuggestions(false)
         setClientSuggestions([])
@@ -170,7 +232,7 @@ const Invoice = () => {
     const addItem = () => {
         setInvoiceData({
             ...invoiceData,
-            items: [...invoiceData.items, { description: '', quantity: 1, unitPrice: 0 }]
+            items: [...invoiceData.items, { description: '', hsnSac: '', quantity: 1, unitPrice: 0, perUnit: 'ton' }]
         })
     }
 
@@ -197,6 +259,31 @@ const Invoice = () => {
 
     const calculateTotal = () => {
         return calculateSubtotal() + calculateTax()
+    }
+
+    // Convert number to words (Indian numbering system)
+    const numberToWords = (num) => {
+        const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine']
+        const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+        const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
+
+        if (num === 0) return 'Zero'
+
+        const numToWords = (n) => {
+            if (n < 10) return ones[n]
+            if (n < 20) return teens[n - 10]
+            if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + ones[n % 10] : '')
+            if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 !== 0 ? ' ' + numToWords(n % 100) : '')
+            if (n < 100000) return numToWords(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 !== 0 ? ' ' + numToWords(n % 1000) : '')
+            if (n < 10000000) return numToWords(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 !== 0 ? ' ' + numToWords(n % 100000) : '')
+            return numToWords(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 !== 0 ? ' ' + numToWords(n % 10000000) : '')
+        }
+
+        const rupees = Math.floor(num)
+        const paise = Math.round((num - rupees) * 100)
+
+        let words = 'INR ' + numToWords(rupees) + ' Only'
+        return words
     }
 
     const handlePrint = async () => {
@@ -252,9 +339,45 @@ const Invoice = () => {
                         Back to Dashboard
                     </a>
 
-                    <h2 className={styles.pageTitle}>Generate Invoice</h2>
+                    <h2 className={styles.pageTitle}>Generate Tax Invoice</h2>
 
                     <div className={styles.formCard}>
+                        {/* IRN and Ask Details */}
+                        <div className={styles.formSection}>
+                            <h3 className={styles.sectionTitle}>IRN & Ask Details</h3>
+                            <div className="row g-3">
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>IRN</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.irn}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, irn: e.target.value })}
+                                        placeholder="Invoice Reference Number"
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Ask No.</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.askNo}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, askNo: e.target.value })}
+                                        placeholder="Ask Number"
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Ask Date</label>
+                                    <input
+                                        type="date"
+                                        className={styles.formInput}
+                                        value={invoiceData.askDate}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, askDate: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Invoice Details */}
                         <div className={styles.formSection}>
                             <h3 className={styles.sectionTitle}>Invoice Details</h3>
@@ -282,19 +405,19 @@ const Invoice = () => {
                             </div>
                         </div>
 
-                        {/* Client Information */}
+                        {/* Buyer Information */}
                         <div className={styles.formSection}>
-                            <h3 className={styles.sectionTitle}>Client Information</h3>
+                            <h3 className={styles.sectionTitle}>Buyer Information</h3>
                             <div className="row g-3">
                                 <div className="col-md-6">
-                                    <label className={styles.formLabel}>Client Name *</label>
+                                    <label className={styles.formLabel}>Buyer Name *</label>
                                     <div className={styles.autocompleteWrapper}>
                                         <input
                                             type="text"
                                             className={styles.formInput}
                                             value={invoiceData.clientName}
                                             onChange={handleClientNameChange}
-                                            placeholder="Imani Olowe"
+                                            placeholder="Buyer Name"
                                             autoComplete="off"
                                         />
                                         {showSuggestions && clientSuggestions.length > 0 && (
@@ -326,7 +449,7 @@ const Invoice = () => {
                                         className={styles.formInput}
                                         value={invoiceData.clientPhone}
                                         onChange={(e) => setInvoiceData({ ...invoiceData, clientPhone: e.target.value })}
-                                        placeholder="+123-456-7890"
+                                        placeholder="+91-XXXXXXXXXX"
                                     />
                                 </div>
                                 <div className="col-12">
@@ -336,17 +459,94 @@ const Invoice = () => {
                                         className={styles.formInput}
                                         value={invoiceData.clientAddress}
                                         onChange={(e) => setInvoiceData({ ...invoiceData, clientAddress: e.target.value })}
-                                        placeholder="63 Ivy Road, Hawkville, GA, USA 31036"
+                                        placeholder="Buyer Address"
                                     />
                                 </div>
-                                <div className="col-md-6">
-                                    <label className={styles.formLabel}>GST</label>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>GSTIN/UIN</label>
                                     <input
                                         type="text"
                                         className={styles.formInput}
-                                        value={invoiceData.clientGst}
-                                        onChange={(e) => setInvoiceData({ ...invoiceData, clientGst: e.target.value })}
-                                        placeholder="GST Number"
+                                        value={invoiceData.buyerGstin}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, buyerGstin: e.target.value })}
+                                        placeholder="GSTIN/UIN"
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>State Name</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.buyerStateName}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, buyerStateName: e.target.value })}
+                                        placeholder="e.g., Delhi"
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>State Code</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.buyerStateCode}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, buyerStateCode: e.target.value })}
+                                        placeholder="e.g., 07"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Consignee Information */}
+                        <div className={styles.formSection}>
+                            <h3 className={styles.sectionTitle}>Consignee (Ship to)</h3>
+                            <div className="row g-3">
+                                <div className="col-md-6">
+                                    <label className={styles.formLabel}>Consignee Name</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.consigneeName}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, consigneeName: e.target.value })}
+                                        placeholder="Consignee Name"
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className={styles.formLabel}>Consignee Address</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.consigneeAddress}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, consigneeAddress: e.target.value })}
+                                        placeholder="Consignee Address"
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>GSTIN/UIN</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.consigneeGstin}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, consigneeGstin: e.target.value })}
+                                        placeholder="GSTIN/UIN"
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>State Name</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.consigneeStateName}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, consigneeStateName: e.target.value })}
+                                        placeholder="e.g., Rajasthan"
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>State Code</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.consigneeStateCode}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, consigneeStateCode: e.target.value })}
+                                        placeholder="e.g., 08"
                                     />
                                 </div>
                             </div>
@@ -358,7 +558,7 @@ const Invoice = () => {
                             {invoiceData.items.map((item, index) => (
                                 <div key={index} className={styles.itemRow}>
                                     <div className="row g-3">
-                                        <div className="col-md-5">
+                                        <div className="col-md-4">
                                             <label className={styles.formLabel}>Description</label>
                                             <input
                                                 type="text"
@@ -369,17 +569,28 @@ const Invoice = () => {
                                             />
                                         </div>
                                         <div className="col-md-2">
+                                            <label className={styles.formLabel}>HSN/SAC</label>
+                                            <input
+                                                type="text"
+                                                className={styles.formInput}
+                                                value={item.hsnSac}
+                                                onChange={(e) => updateItem(index, 'hsnSac', e.target.value)}
+                                                placeholder="995463"
+                                            />
+                                        </div>
+                                        <div className="col-md-2">
                                             <label className={styles.formLabel}>Quantity</label>
                                             <input
                                                 type="number"
                                                 className={styles.formInput}
                                                 value={item.quantity}
                                                 onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                                                min="1"
+                                                min="0"
+                                                step="0.01"
                                             />
                                         </div>
-                                        <div className="col-md-3">
-                                            <label className={styles.formLabel}>Unit Price (Rs.)</label>
+                                        <div className="col-md-2">
+                                            <label className={styles.formLabel}>Rate (Rs.)</label>
                                             <input
                                                 type="number"
                                                 className={styles.formInput}
@@ -389,7 +600,21 @@ const Invoice = () => {
                                                 step="0.01"
                                             />
                                         </div>
-                                        <div className="col-md-2 d-flex align-items-end">
+                                        <div className="col-md-1">
+                                            <label className={styles.formLabel}>Per</label>
+                                            <select
+                                                className={styles.formInput}
+                                                value={item.perUnit}
+                                                onChange={(e) => updateItem(index, 'perUnit', e.target.value)}
+                                            >
+                                                <option value="ton">ton</option>
+                                                <option value="kg">kg</option>
+                                                <option value="piece">piece</option>
+                                                <option value="box">box</option>
+                                                <option value="unit">unit</option>
+                                            </select>
+                                        </div>
+                                        <div className="col-md-1 d-flex align-items-end">
                                             {invoiceData.items.length > 1 && (
                                                 <button
                                                     type="button"
@@ -415,10 +640,10 @@ const Invoice = () => {
 
                         {/* Tax */}
                         <div className={styles.formSection}>
-                            <h3 className={styles.sectionTitle}>Gst</h3>
+                            <h3 className={styles.sectionTitle}>GST</h3>
                             <div className="row g-3">
                                 <div className="col-md-4">
-                                    <label className={styles.formLabel}>GST (%)</label>
+                                    <label className={styles.formLabel}>GST Rate (%)</label>
                                     <input
                                         type="number"
                                         className={styles.formInput}
@@ -426,6 +651,198 @@ const Invoice = () => {
                                         onChange={(e) => setInvoiceData({ ...invoiceData, taxRate: parseFloat(e.target.value) || 0 })}
                                         min="0"
                                         step="0.01"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Delivery and Shipping Details */}
+                        <div className={styles.formSection}>
+                            <h3 className={styles.sectionTitle}>Delivery & Shipping Details</h3>
+                            <div className="row g-3">
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Delivery Note</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.deliveryNote}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, deliveryNote: e.target.value })}
+                                        placeholder="Delivery Note"
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Mode/Terms of Payment</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.modeTermsOfPayment}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, modeTermsOfPayment: e.target.value })}
+                                        placeholder="Mode/Terms of Payment"
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Reference No. & Date</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.referenceNoDate}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, referenceNoDate: e.target.value })}
+                                        placeholder="Reference No. & Date"
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Other References</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.otherReferences}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, otherReferences: e.target.value })}
+                                        placeholder="Other References"
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Buyer's Order No.</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.buyersOrderNo}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, buyersOrderNo: e.target.value })}
+                                        placeholder="Buyer's Order No."
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Buyer's Order Date</label>
+                                    <input
+                                        type="date"
+                                        className={styles.formInput}
+                                        value={invoiceData.buyersOrderDate}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, buyersOrderDate: e.target.value })}
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Dispatch Doc No.</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.dispatchDocNo}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, dispatchDocNo: e.target.value })}
+                                        placeholder="Dispatch Doc No."
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Delivery Note Date</label>
+                                    <input
+                                        type="date"
+                                        className={styles.formInput}
+                                        value={invoiceData.deliveryNoteDate}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, deliveryNoteDate: e.target.value })}
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Dispatched through</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.dispatchedThrough}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, dispatchedThrough: e.target.value })}
+                                        placeholder="Dispatched through"
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className={styles.formLabel}>Destination</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.destination}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, destination: e.target.value })}
+                                        placeholder="Destination"
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className={styles.formLabel}>Terms of Delivery</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.termsOfDelivery}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, termsOfDelivery: e.target.value })}
+                                        placeholder="Terms of Delivery"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Seller Information */}
+                        <div className={styles.formSection}>
+                            <h3 className={styles.sectionTitle}>Seller Information</h3>
+                            <div className="row g-3">
+                                <div className="col-md-6">
+                                    <label className={styles.formLabel}>Seller Name</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.sellerName}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, sellerName: e.target.value })}
+                                        placeholder="Seller Name"
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className={styles.formLabel}>Seller Email</label>
+                                    <input
+                                        type="email"
+                                        className={styles.formInput}
+                                        value={invoiceData.sellerEmail}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, sellerEmail: e.target.value })}
+                                        placeholder="info@example.com"
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>GSTIN/UIN</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.sellerGstin}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, sellerGstin: e.target.value })}
+                                        placeholder="GSTIN/UIN"
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>State Name</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.sellerStateName}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, sellerStateName: e.target.value })}
+                                        placeholder="e.g., Delhi"
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>State Code</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.sellerStateCode}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, sellerStateCode: e.target.value })}
+                                        placeholder="e.g., 07"
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className={styles.formLabel}>Regd Address</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.regdAddress}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, regdAddress: e.target.value })}
+                                        placeholder="Registered Address"
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className={styles.formLabel}>Office Address</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={invoiceData.offcAddress}
+                                        onChange={(e) => setInvoiceData({ ...invoiceData, offcAddress: e.target.value })}
+                                        placeholder="Office Address"
                                     />
                                 </div>
                             </div>
@@ -494,45 +911,6 @@ const Invoice = () => {
                             </div>
                         </div>
 
-                        {/* Seller Information */}
-                        <div className={styles.formSection}>
-                            <h3 className={styles.sectionTitle}>Seller Information</h3>
-                            <div className="row g-3">
-                                <div className="col-md-6">
-                                    <label className={styles.formLabel}>Seller Name</label>
-                                    <input
-                                        type="text"
-                                        className={styles.formInput}
-                                        value={invoiceData.sellerName}
-                                        readOnly
-                                        placeholder="Loading..."
-                                        style={{ background: '#f9fafb', cursor: 'not-allowed' }}
-                                    />
-                                </div>
-                                <div className="col-md-6">
-                                    <label className={styles.formLabel}>Regd Address</label>
-                                    <input
-                                        type="text"
-                                        className={styles.formInput}
-                                        value={invoiceData.regdAddress}
-                                        readOnly
-                                        placeholder="Loading..."
-                                        style={{ background: '#f9fafb', cursor: 'not-allowed' }}
-                                    />
-                                </div>
-                                <div className="col-md-6">
-                                    <label className={styles.formLabel}>Offc Add</label>
-                                    <input
-                                        type="text"
-                                        className={styles.formInput}
-                                        value={invoiceData.offcAddress}
-                                        onChange={(e) => setInvoiceData({ ...invoiceData, offcAddress: e.target.value })}
-                                        placeholder="Office Address"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-
                         {/* Generate Button */}
                         <button
                             type="button"
@@ -548,120 +926,245 @@ const Invoice = () => {
 
             {/* Invoice Preview - Visible on print */}
             <div className={styles.invoicePreview}>
-                <div className={styles.invoicePage}>
-                    {/* Header */}
-                    <div className={styles.invoiceHeader}>
-                        <div className={styles.logoSection}>
-                            <img src="/img/logo.png" alt="MetaSense Logo" className={styles.logo} />
-                            <div className={styles.companyBranding}>
-                                <div className={styles.brandName}>MetaSense</div>
-
+                <div className={styles.taxInvoicePage}>
+                    {/* Header with IRN and QR Code */}
+                    <div className={styles.taxInvoiceHeader}>
+                        <div className={styles.irnSection}>
+                            <div className={styles.irnLabel}>IRN</div>
+                            <div className={styles.irnValue}>{invoiceData.irn || 'N/A'}</div>
+                            <div className={styles.askDetails}>
+                                <div>Ask No. : {invoiceData.askNo || 'N/A'}</div>
+                                <div>Ask Date : {invoiceData.askDate ? new Date(invoiceData.askDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</div>
                             </div>
                         </div>
-                        <div className={styles.invoiceTitle}>INVOICE</div>
-                    </div>
-
-                    {/* Client and Invoice Info */}
-                    <div className={styles.invoiceInfo}>
-                        <div className={styles.billedTo}>
-                            <div className={styles.label}>BILLED TO:</div>
-                            <div className={styles.clientName}>{invoiceData.clientName || 'Client Name'}</div>
-                            <div className={styles.clientDetails}>{invoiceData.clientPhone}</div>
-                            <div className={styles.clientDetails}>{invoiceData.clientAddress}</div>
-                            {invoiceData.clientGst && (
-                                <div className={styles.clientDetails}>GST: {invoiceData.clientGst}</div>
+                        <div className={styles.titleSection}>
+                            <h1 className={styles.taxInvoiceTitle}>Tax Invoice</h1>
+                        </div>
+                        <div className={styles.qrSection}>
+                            <div className={styles.eInvoiceLabel}>e-Invoice</div>
+                            {qrCodeDataUrl && (
+                                <img src={qrCodeDataUrl} alt="QR Code" className={styles.qrCode} />
                             )}
                         </div>
-                        <div className={styles.invoiceDetails}>
-                            <div className={styles.invoiceNumber}>Invoice No. {invoiceData.invoiceNo || '00000'}</div>
-                            <div className={styles.invoiceDate}>
-                                {invoiceData.invoiceDate ? new Date(invoiceData.invoiceDate).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Date'}
-                            </div>
-                        </div>
                     </div>
 
-                    {/* Items Table */}
-                    <table className={styles.itemsTable}>
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th>Quantity</th>
-                                <th>Unit Price</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {invoiceData.items.map((item, index) => (
-                                <tr key={index}>
-                                    <td>{item.description || 'Item'}</td>
-                                    <td>{item.quantity}</td>
-                                    <td>Rs.{item.unitPrice.toFixed(2)}</td>
-                                    <td>Rs.{(item.quantity * item.unitPrice).toFixed(2)}</td>
+                    {/* Main Invoice Table */}
+                    <div className={styles.taxInvoiceBody}>
+                        <table className={styles.mainInvoiceTable}>
+                            <tbody>
+                                {/* Seller and Invoice Details Row */}
+                                <tr>
+                                    <td style={{ width: '50%', verticalAlign: 'top' }}>
+                                        <div className={styles.companyName}>{invoiceData.sellerName || 'Sense Projects Private Limited'}</div>
+                                        <div>{invoiceData.regdAddress || 'Address'}</div>
+                                        <div>GSTIN/UIN : {invoiceData.sellerGstin || 'N/A'}</div>
+                                        <div>State Name : {invoiceData.sellerStateName || 'Delhi'}, Code : {invoiceData.sellerStateCode || '07'}</div>
+                                        <div>E-Mail : {invoiceData.sellerEmail || 'info@senseprojects.in'}</div>
+                                    </td>
+                                    <td style={{ width: '50%', padding: 0, verticalAlign: 'top', height: '1px' }} rowSpan="3">
+                                        <table className={styles.nestedTable}>
+                                            <tbody>
+                                                <tr>
+                                                    <td style={{ width: '50%' }}>Invoice No.</td>
+                                                    <td style={{ width: '50%' }}>Dated</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><strong>{invoiceData.invoiceNo || 'N/A'}</strong></td>
+                                                    <td><strong>{invoiceData.invoiceDate ? new Date(invoiceData.invoiceDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</strong></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Delivery Note</td>
+                                                    <td>Mode/Terms of Payment</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{invoiceData.deliveryNote || ''}</td>
+                                                    <td>{invoiceData.modeTermsOfPayment || ''}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Reference No. & Date.</td>
+                                                    <td>Other References</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{invoiceData.referenceNoDate || ''}</td>
+                                                    <td>{invoiceData.otherReferences || ''}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Buyer's Order No.</td>
+                                                    <td>Dated</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{invoiceData.buyersOrderNo || ''}</td>
+                                                    <td>{invoiceData.buyersOrderDate ? new Date(invoiceData.buyersOrderDate).toLocaleDateString('en-GB').replace(/\//g, '-') : ''}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Dispatch Doc No.</td>
+                                                    <td>Delivery Note Date</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{invoiceData.dispatchDocNo || ''}</td>
+                                                    <td>{invoiceData.deliveryNoteDate ? new Date(invoiceData.deliveryNoteDate).toLocaleDateString('en-GB').replace(/\//g, '-') : ''}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Dispatched through</td>
+                                                    <td>Destination</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>{invoiceData.dispatchedThrough || ''}</td>
+                                                    <td>{invoiceData.destination || ''}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td colSpan="2">Terms of Delivery</td>
+                                                </tr>
+                                                <tr>
+                                                    <td colSpan="2" style={{ height: '48px' }}>{invoiceData.termsOfDelivery || ''}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
 
-                    {/* Totals */}
-                    <div className={styles.totalsSection}>
-                        <div className={styles.totalRow}>
-                            <span>Subtotal</span>
-                            <span>Rs.{calculateSubtotal().toFixed(2)}</span>
-                        </div>
-                        <div className={styles.totalRow}>
-                            <span>GST ({invoiceData.taxRate}%)</span>
-                            <span>Rs.{calculateTax().toFixed(2)}</span>
-                        </div>
-                        <div className={styles.totalRowFinal}>
-                            <span>Total</span>
-                            <span>Rs.{calculateTotal().toFixed(2)}</span>
-                        </div>
-                    </div>
+                                {/* Consignee Row - LEFT COLUMN ONLY */}
+                                <tr>
+                                    <td style={{ verticalAlign: 'top' }}>
+                                        <div className={styles.sectionLabel}>Consignee (Ship to)</div>
+                                        <div className={styles.consigneeName}>{invoiceData.consigneeName || invoiceData.clientName || 'Consignee Name'}</div>
+                                        <div>{invoiceData.consigneeAddress || invoiceData.clientAddress || 'Address'}</div>
+                                        <div>GSTIN/UIN : {invoiceData.consigneeGstin || invoiceData.buyerGstin || 'N/A'}</div>
+                                        <div>State Name : {invoiceData.consigneeStateName || invoiceData.buyerStateName || 'N/A'}, Code : {invoiceData.consigneeStateCode || invoiceData.buyerStateCode || 'N/A'}</div>
+                                    </td>
+                                </tr>
 
-                    {/* Footer */}
-                    <div className={styles.invoiceFooter}>
-                        <div className={styles.paymentInfo}>
-                            <div className={styles.paymentLabel}>PAYMENT INFORMATION</div>
-                            <div className={styles.paymentDetails}>{invoiceData.paymentInfo.bankName}</div>
-                            <div className={styles.paymentDetails}>Account Name: {invoiceData.paymentInfo.accountName}</div>
-                            <div className={styles.paymentDetails}>Account No.: {invoiceData.paymentInfo.accountNo}</div>
-                            <div className={styles.paymentDetails}>IFSC Code: {invoiceData.paymentInfo.ifscCode}</div>
-                            <div className={styles.paymentDetails}>Branch: {invoiceData.paymentInfo.branch}</div>
+                                {/* Buyer Row - LEFT COLUMN ONLY */}
+                                <tr>
+                                    <td style={{ verticalAlign: 'top' }}>
+                                        <div className={styles.sectionLabel}>Buyer (Bill to)</div>
+                                        <div className={styles.buyerName}>{invoiceData.clientName || 'Buyer Name'}</div>
+                                        <div>{invoiceData.clientAddress || 'Address'}</div>
+                                        <div>GSTIN/UIN : {invoiceData.buyerGstin || 'N/A'}</div>
+                                        <div>State Name : {invoiceData.buyerStateName || 'N/A'}, Code : {invoiceData.buyerStateCode || 'N/A'}</div>
+                                    </td>
+                                </tr>
 
-                        </div>
-                        <div className={styles.companyInfo}>
-                            <div className={styles.companyName}>MetaSense C/o Sense Project Pvt. Ltd.</div>
-                            <div className={styles.companyDetails}>Regd Address: {invoiceData.regdAddress}</div>
-                            <div className={styles.companyDetails}>Office Address: {invoiceData.offcAddress}</div>
-                            <div className={styles.stampWrapper}>
-                                <img src="/img/stamp.png" alt="Stamp" className={styles.stamp} />
-                                <img src="/img/signature.png" alt="Signature" className={styles.signature} />
-                            </div>
-                        </div>
-                    </div>
+                            </tbody>
+                        </table>
 
-                    {/* Contact Footer */}
-                    <div className={styles.contactFooter}>
-                        <div className={styles.contactItem}>
-                            <span className={styles.contactIcon}>📞</span>
-                            <span>+91-9599196874</span>
-                        </div>
-                        <div className={styles.contactItem}>
-                            <span className={styles.contactIcon}>✉️</span>
-                            <span>info@metasense.in</span>
-                        </div>
-                        <div className={styles.contactItem}>
-                            <span className={styles.contactIcon}>🌐</span>
-                            <span>www.metasense.in</span>
-                        </div>
-                        <div className={styles.contactItem}>
-                            <img src="/img/insta.png" alt="Instagram" className={styles.contactIconImg} />
-                            <span>@metasensedigital</span>
+                        {/* Items Table */}
+                        <table className={styles.mainInvoiceTable}>
+                            <thead>
+                                <tr>
+                                    <th style={{ width: '4%', textAlign: 'center' }}>Sl<br />No.</th>
+                                    <th style={{ width: '40%', textAlign: 'center' }}>Description of Services</th>
+                                    <th style={{ width: '10%', textAlign: 'center' }}>HSN/SAC</th>
+                                    <th style={{ width: '10%', textAlign: 'center' }}>Quantity</th>
+                                    <th style={{ width: '12%', textAlign: 'center' }}>Rate</th>
+                                    <th style={{ width: '8%', textAlign: 'center' }}>per</th>
+                                    <th style={{ width: '16%', textAlign: 'center' }}>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {invoiceData.items.map((item, index) => (
+                                    <tr key={index}>
+                                        <td style={{ textAlign: 'center' }}>{index + 1}</td>
+                                        <td style={{ textAlign: 'left' }}>{item.description || 'Item'}</td>
+                                        <td style={{ textAlign: 'center' }}>{item.hsnSac || ''}</td>
+                                        <td style={{ textAlign: 'center' }}>{item.quantity}</td>
+                                        <td style={{ textAlign: 'right' }}>{item.unitPrice.toFixed(2)}</td>
+                                        <td style={{ textAlign: 'center' }}>{item.perUnit}</td>
+                                        <td style={{ textAlign: 'right' }}>{(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                    </tr>
+                                ))}
+                                <tr>
+                                    <td colSpan="6" style={{ textAlign: 'right', fontStyle: 'italic' }}>OUTPUT IGST</td>
+                                    <td style={{ textAlign: 'right' }}>{invoiceData.taxRate} %</td>
+                                </tr>
+                                <tr style={{ height: '35px' }}>
+                                    <td colSpan="7"></td>
+                                </tr>
+                                <tr className={styles.totalRow}>
+                                    <td colSpan="3"><strong>Total</strong></td>
+                                    <td style={{ textAlign: 'center' }}><strong>{invoiceData.items.reduce((sum, item) => sum + item.quantity, 0)}</strong></td>
+                                    <td colSpan="2"></td>
+                                    <td style={{ textAlign: 'right' }}><strong>₹ {calculateTotal().toFixed(2)}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colSpan="7">
+                                        <div className={styles.amountLabel}>Amount Chargeable (in words)</div>
+                                        <div className={styles.amountText}><strong>{numberToWords(calculateTotal())}</strong></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        {/* HSN Summary Table */}
+                        <table className={styles.mainInvoiceTable}>
+                            <thead>
+                                <tr>
+                                    <th rowSpan="2" style={{ verticalAlign: 'middle' }}>HSN/SAC</th>
+                                    <th rowSpan="2" style={{ verticalAlign: 'middle' }}>Taxable<br />Value</th>
+                                    <th colSpan="2">IGST</th>
+                                    <th rowSpan="2" style={{ verticalAlign: 'middle' }}>Total<br />Tax Amount</th>
+                                </tr>
+                                <tr>
+                                    <th>Rate</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {invoiceData.items.map((item, index) => (
+                                    <tr key={index}>
+                                        <td style={{ textAlign: 'center' }}>{item.hsnSac || 'N/A'}</td>
+                                        <td style={{ textAlign: 'right' }}>{(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                        <td style={{ textAlign: 'center' }}>{invoiceData.taxRate}%</td>
+                                        <td style={{ textAlign: 'right' }}>{((item.quantity * item.unitPrice * invoiceData.taxRate) / 100).toFixed(2)}</td>
+                                        <td style={{ textAlign: 'right' }}>{((item.quantity * item.unitPrice * invoiceData.taxRate) / 100).toFixed(2)}</td>
+                                    </tr>
+                                ))}
+                                <tr className={styles.totalRow}>
+                                    <td><strong>Total</strong></td>
+                                    <td style={{ textAlign: 'right' }}><strong>{calculateSubtotal().toFixed(2)}</strong></td>
+                                    <td></td>
+                                    <td style={{ textAlign: 'right' }}><strong>{calculateTax().toFixed(2)}</strong></td>
+                                    <td style={{ textAlign: 'right' }}><strong>{calculateTax().toFixed(2)}</strong></td>
+                                </tr>
+                                <tr>
+                                    <td colSpan="5">
+                                        <span className={styles.taxAmountLabel}>Tax Amount (in words) : </span>
+                                        <span className={styles.taxAmountText}><strong>{numberToWords(calculateTax())}</strong></span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        {/* Declaration and Signature */}
+                        <table className={styles.mainInvoiceTable}>
+                            <tbody>
+                                <tr>
+                                    <td style={{ width: '50%', verticalAlign: 'top' }}>
+                                        <div className={styles.declarationTitle}>Declaration</div>
+                                        <div className={styles.declarationText}>
+                                            We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.
+                                        </div>
+                                    </td>
+                                    <td style={{ width: '50%', verticalAlign: 'top', textAlign: 'right' }}>
+                                        <div className={styles.forCompany}>for {invoiceData.sellerName || 'Sense Projects Private Limited'}</div>
+                                        <div className={styles.signatureArea}>
+                                            <img src="/img/signature.png" alt="Signature" className={styles.signatureImg} />
+                                            <img src="/img/stamp.png" alt="Stamp" className={styles.stampImg} />
+                                        </div>
+                                        <div className={styles.authorizedSignatory}>Authorised Signatory</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        {/* Footer */}
+                        <div className={styles.taxInvoiceFooter}>
+                            This is a Computer Generated Invoice
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
 
