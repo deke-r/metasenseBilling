@@ -14,7 +14,7 @@ const Invoice = () => {
         // IRN and Ask details
         irn: '',
         askNo: '',
-        askDate: '',
+        askDate: new Date().toISOString().split('T')[0],
 
         // Invoice details
         invoiceNo: '',
@@ -74,6 +74,8 @@ const Invoice = () => {
     const [nextInvoiceNumber, setNextInvoiceNumber] = useState(null)
     const [clientSuggestions, setClientSuggestions] = useState([])
     const [showSuggestions, setShowSuggestions] = useState(false)
+    const [consigneeSuggestions, setConsigneeSuggestions] = useState([])
+    const [showConsigneeSuggestions, setShowConsigneeSuggestions] = useState(false)
     const [searchTimeout, setSearchTimeout] = useState(null)
     const [qrCodeDataUrl, setQrCodeDataUrl] = useState('')
 
@@ -93,7 +95,9 @@ const Invoice = () => {
 
                 setInvoiceData(prev => ({
                     ...prev,
-                    invoiceNo: response.data.invoiceNo
+                    invoiceNo: response.data.invoiceNo,
+                    irn: response.data.generatedIrn || '',
+                    askNo: response.data.nextAckNo || ''
                 }))
                 setNextInvoiceNumber(response.data.nextNumber)
             } catch (error) {
@@ -157,11 +161,16 @@ const Invoice = () => {
         }
     }, [invoiceData.irn])
 
-    // Search clients as user types
-    const searchClients = async (query) => {
+    // Search clients as user types (Reusable for both)
+    const searchClients = async (query, type = 'buyer') => {
         if (!query || query.trim() === '') {
-            setClientSuggestions([])
-            setShowSuggestions(false)
+            if (type === 'buyer') {
+                setClientSuggestions([])
+                setShowSuggestions(false)
+            } else {
+                setConsigneeSuggestions([])
+                setShowConsigneeSuggestions(false)
+            }
             return
         }
 
@@ -176,8 +185,13 @@ const Invoice = () => {
                 }
             )
 
-            setClientSuggestions(response.data)
-            setShowSuggestions(response.data.length > 0)
+            if (type === 'buyer') {
+                setClientSuggestions(response.data)
+                setShowSuggestions(response.data.length > 0)
+            } else {
+                setConsigneeSuggestions(response.data)
+                setShowConsigneeSuggestions(response.data.length > 0)
+            }
         } catch (error) {
             console.error('Error searching clients:', error)
         }
@@ -188,15 +202,25 @@ const Invoice = () => {
         const value = e.target.value
         setInvoiceData({ ...invoiceData, clientName: value })
 
-        // Clear existing timeout
-        if (searchTimeout) {
-            clearTimeout(searchTimeout)
-        }
+        if (searchTimeout) clearTimeout(searchTimeout)
 
-        // Set new timeout for search
         const timeout = setTimeout(() => {
-            searchClients(value)
-        }, 300) // 300ms debounce
+            searchClients(value, 'buyer')
+        }, 300)
+
+        setSearchTimeout(timeout)
+    }
+
+    // Handle consignee name input change with debounce
+    const handleConsigneeNameChange = (e) => {
+        const value = e.target.value
+        setInvoiceData({ ...invoiceData, consigneeName: value })
+
+        if (searchTimeout) clearTimeout(searchTimeout)
+
+        const timeout = setTimeout(() => {
+            searchClients(value, 'consignee')
+        }, 300)
 
         setSearchTimeout(timeout)
     }
@@ -217,11 +241,26 @@ const Invoice = () => {
         setClientSuggestions([])
     }
 
+    // Handle consignee selection from suggestions
+    const handleConsigneeSelect = (client) => {
+        setInvoiceData({
+            ...invoiceData,
+            consigneeName: client.name,
+            consigneeAddress: client.address || '',
+            consigneeGstin: client.gst || '',
+            consigneeStateName: client.state_name || '',
+            consigneeStateCode: client.state_code || ''
+        })
+        setShowConsigneeSuggestions(false)
+        setConsigneeSuggestions([])
+    }
+
     // Close suggestions when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (!event.target.closest(`.${styles.autocompleteWrapper}`)) {
                 setShowSuggestions(false)
+                setShowConsigneeSuggestions(false)
             }
         }
 
@@ -352,8 +391,9 @@ const Invoice = () => {
                                         type="text"
                                         className={styles.formInput}
                                         value={invoiceData.irn}
-                                        onChange={(e) => setInvoiceData({ ...invoiceData, irn: e.target.value })}
-                                        placeholder="Invoice Reference Number"
+                                        readOnly
+                                        placeholder="Auto-generated"
+                                        style={{ background: '#f9fafb', cursor: 'not-allowed' }}
                                     />
                                 </div>
                                 <div className="col-md-4">
@@ -362,8 +402,9 @@ const Invoice = () => {
                                         type="text"
                                         className={styles.formInput}
                                         value={invoiceData.askNo}
-                                        onChange={(e) => setInvoiceData({ ...invoiceData, askNo: e.target.value })}
-                                        placeholder="Ask Number"
+                                        readOnly
+                                        placeholder="Auto-generated"
+                                        style={{ background: '#f9fafb', cursor: 'not-allowed' }}
                                     />
                                 </div>
                                 <div className="col-md-4">
@@ -501,13 +542,36 @@ const Invoice = () => {
                             <div className="row g-3">
                                 <div className="col-md-6">
                                     <label className={styles.formLabel}>Consignee Name</label>
-                                    <input
-                                        type="text"
-                                        className={styles.formInput}
-                                        value={invoiceData.consigneeName}
-                                        onChange={(e) => setInvoiceData({ ...invoiceData, consigneeName: e.target.value })}
-                                        placeholder="Consignee Name"
-                                    />
+                                    <div className={styles.autocompleteWrapper}>
+                                        <input
+                                            type="text"
+                                            className={styles.formInput}
+                                            value={invoiceData.consigneeName}
+                                            onChange={handleConsigneeNameChange}
+                                            placeholder="Consignee Name"
+                                            autoComplete="off"
+                                        />
+                                        {showConsigneeSuggestions && consigneeSuggestions.length > 0 && (
+                                            <div className={styles.suggestionsList}>
+                                                {consigneeSuggestions.map((client) => (
+                                                    <div
+                                                        key={client.id}
+                                                        className={styles.suggestionItem}
+                                                        onClick={() => handleConsigneeSelect(client)}
+                                                    >
+                                                        <div className={styles.suggestionName}>{client.name}</div>
+                                                        {(client.phone || client.address) && (
+                                                            <div className={styles.suggestionDetails}>
+                                                                {client.phone && <span>{client.phone}</span>}
+                                                                {client.phone && client.address && <span> • </span>}
+                                                                {client.address && <span>{client.address}</span>}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="col-md-6">
                                     <label className={styles.formLabel}>Consignee Address</label>
@@ -935,8 +999,8 @@ const Invoice = () => {
                         <div className={styles.irnSection}>
                             <div className={styles.irnLabel}>IRN : <strong>{invoiceData.irn || 'N/A'}</strong></div>
                             <div className={styles.askDetails}>
-                                <div>Ask No. : <strong>{invoiceData.askNo || 'N/A'}</strong></div>
-                                <div>Ask Date : <strong>{invoiceData.askDate ? new Date(invoiceData.askDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</strong></div>
+                                <div>Ack No. : <strong>{invoiceData.askNo || 'N/A'}</strong></div>
+                                <div>Ack Date : <strong>{invoiceData.askDate ? new Date(invoiceData.askDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</strong></div>
                             </div>
                         </div>
                         <div className={styles.qrSection}>

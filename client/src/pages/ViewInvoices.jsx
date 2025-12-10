@@ -264,7 +264,7 @@ const ViewInvoices = () => {
                                 <div className={invoiceStyles.irnLabel}>IRN : <strong>{selectedInvoice.irn || 'N/A'}</strong></div>
                                 <div className={invoiceStyles.askDetails}>
                                     <div>Ack No. : <strong>{selectedInvoice.askNo || 'N/A'}</strong></div>
-                                    <div>Ack Date : <strong>{selectedInvoice.askDate ? new Date(selectedInvoice.askDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</strong></div>
+                                    <div>Ack Date : <strong>{selectedInvoice.askDate ? new Date(selectedInvoice.askDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</strong></div>
                                 </div>
                             </div>
                             <div className={invoiceStyles.qrSection}>

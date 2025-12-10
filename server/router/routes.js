@@ -23,15 +23,23 @@ const verifyToken = (req, res, next) => {
 // Get next invoice number
 router.get('/invoice/next-number', verifyToken, async (req, res) => {
     try {
-        // Get current invoice number
-        const [rows] = await con.query('SELECT current_invoice_no, prefix FROM invoice_counter WHERE id = 1');
+        // Get current invoice number and ack number
+        const [rows] = await con.query('SELECT current_invoice_no, current_ack_no, prefix FROM invoice_counter WHERE id = 1');
 
         if (rows.length === 0) {
             return res.status(404).json({ message: "Invoice counter not initialized" });
         }
 
         const nextNumber = rows[0].current_invoice_no + 1;
+        const nextAckNo = (rows[0].current_ack_no || 120250000000000) + 1;
         const prefix = rows[0].prefix || 'SPPL';
+
+        // Generate random IRN (64-char hex)
+        const chars = '0123456789abcdef';
+        let generatedIrn = '';
+        for (let i = 0; i < 64; i++) {
+            generatedIrn += chars[Math.floor(Math.random() * chars.length)];
+        }
 
         // Calculate financial year (April to March)
         const now = new Date();
@@ -52,7 +60,7 @@ router.get('/invoice/next-number', verifyToken, async (req, res) => {
         const financialYear = `${String(financialYearStart).slice(-2)}-${String(financialYearEnd).slice(-2)}`;
         const invoiceNo = `${prefix}/${financialYear}/${String(nextNumber).padStart(4, '0')}`;
 
-        res.status(200).json({ invoiceNo, nextNumber });
+        res.status(200).json({ invoiceNo, nextNumber, nextAckNo, generatedIrn });
     } catch (error) {
         console.error('Error fetching invoice number:', error);
         res.status(500).json({ message: "Internal server error" });
@@ -140,6 +148,30 @@ router.post('/invoice/save', verifyToken, async (req, res) => {
         await connection.beginTransaction();
 
         const { invoiceData } = req.body;
+
+        // Auto-generate IRN if missing (64-character hex string)
+        if (!invoiceData.irn) {
+            const chars = '0123456789abcdef';
+            let irn = '';
+            for (let i = 0; i < 64; i++) {
+                irn += chars[Math.floor(Math.random() * chars.length)];
+            }
+            invoiceData.irn = irn;
+        }
+
+        // Auto-generate Ack No if missing (15-digit number)
+        if (!invoiceData.askNo) {
+            let askNo = '';
+            for (let i = 0; i < 15; i++) {
+                askNo += Math.floor(Math.random() * 10);
+            }
+            invoiceData.askNo = askNo;
+        }
+
+        // Auto-generate Ack Date if missing (Use current date)
+        if (!invoiceData.askDate) {
+            invoiceData.askDate = new Date();
+        }
 
         // Save client details if provided
         if (invoiceData.clientName && invoiceData.clientName.trim() !== '') {
@@ -258,7 +290,7 @@ router.post('/invoice/save', verifyToken, async (req, res) => {
         }
 
         // Update invoice counter
-        await connection.query('UPDATE invoice_counter SET current_invoice_no = current_invoice_no + 1 WHERE id = 1');
+        await connection.query('UPDATE invoice_counter SET current_invoice_no = current_invoice_no + 1, current_ack_no = current_ack_no + 1 WHERE id = 1');
 
         await connection.commit();
         res.status(200).json({ message: "Invoice saved successfully", invoiceId });
