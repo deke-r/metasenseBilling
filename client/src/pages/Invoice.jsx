@@ -927,18 +927,17 @@ const Invoice = () => {
             {/* Invoice Preview - Visible on print */}
             <div className={styles.invoicePreview}>
                 <div className={styles.taxInvoicePage}>
+                    <div className={styles.titleSection}>
+                        <h1 className={styles.taxInvoiceTitle}>Tax Invoice</h1>
+                    </div>
                     {/* Header with IRN and QR Code */}
                     <div className={styles.taxInvoiceHeader}>
                         <div className={styles.irnSection}>
-                            <div className={styles.irnLabel}>IRN</div>
-                            <div className={styles.irnValue}>{invoiceData.irn || 'N/A'}</div>
+                            <div className={styles.irnLabel}>IRN : <strong>{invoiceData.irn || 'N/A'}</strong></div>
                             <div className={styles.askDetails}>
-                                <div>Ask No. : {invoiceData.askNo || 'N/A'}</div>
-                                <div>Ask Date : {invoiceData.askDate ? new Date(invoiceData.askDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</div>
+                                <div>Ask No. : <strong>{invoiceData.askNo || 'N/A'}</strong></div>
+                                <div>Ask Date : <strong>{invoiceData.askDate ? new Date(invoiceData.askDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</strong></div>
                             </div>
-                        </div>
-                        <div className={styles.titleSection}>
-                            <h1 className={styles.taxInvoiceTitle}>Tax Invoice</h1>
                         </div>
                         <div className={styles.qrSection}>
                             <div className={styles.eInvoiceLabel}>e-Invoice</div>
@@ -965,58 +964,58 @@ const Invoice = () => {
                                         <table className={styles.nestedTable}>
                                             <tbody>
                                                 <tr>
-                                                    <td style={{ width: '50%' }}>Invoice No.</td>
-                                                    <td style={{ width: '50%' }}>Dated</td>
+                                                    <td className='border-bottom-0' style={{ width: '50%' }}>Invoice No.</td>
+                                                    <td className='border-bottom-0' style={{ width: '50%' }}>Dated</td>
                                                 </tr>
                                                 <tr>
                                                     <td><strong>{invoiceData.invoiceNo || 'N/A'}</strong></td>
                                                     <td><strong>{invoiceData.invoiceDate ? new Date(invoiceData.invoiceDate).toLocaleDateString('en-GB').replace(/\//g, '-') : 'N/A'}</strong></td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Delivery Note</td>
-                                                    <td>Mode/Terms of Payment</td>
+                                                    <td className='border-bottom-0'>Delivery Note</td>
+                                                    <td className='border-bottom-0'>Mode/Terms of Payment</td>
                                                 </tr>
                                                 <tr>
                                                     <td>{invoiceData.deliveryNote || ''}</td>
                                                     <td>{invoiceData.modeTermsOfPayment || ''}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Reference No. & Date.</td>
-                                                    <td>Other References</td>
+                                                    <td className='border-bottom-0'>Reference No. & Date.</td>
+                                                    <td className='border-bottom-0'>Other References</td>
                                                 </tr>
                                                 <tr>
                                                     <td>{invoiceData.referenceNoDate || ''}</td>
                                                     <td>{invoiceData.otherReferences || ''}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Buyer's Order No.</td>
-                                                    <td>Dated</td>
+                                                    <td className='border-bottom-0'>Buyer's Order No.</td>
+                                                    <td className='border-bottom-0'>Dated</td>
                                                 </tr>
                                                 <tr>
                                                     <td>{invoiceData.buyersOrderNo || ''}</td>
                                                     <td>{invoiceData.buyersOrderDate ? new Date(invoiceData.buyersOrderDate).toLocaleDateString('en-GB').replace(/\//g, '-') : ''}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Dispatch Doc No.</td>
-                                                    <td>Delivery Note Date</td>
+                                                    <td className='border-bottom-0'>Dispatch Doc No.</td>
+                                                    <td className='border-bottom-0'>Delivery Note Date</td>
                                                 </tr>
                                                 <tr>
                                                     <td>{invoiceData.dispatchDocNo || ''}</td>
                                                     <td>{invoiceData.deliveryNoteDate ? new Date(invoiceData.deliveryNoteDate).toLocaleDateString('en-GB').replace(/\//g, '-') : ''}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td>Dispatched through</td>
-                                                    <td>Destination</td>
+                                                    <td className='border-bottom-0'>Dispatched through</td>
+                                                    <td className='border-bottom-0'>Destination</td>
                                                 </tr>
                                                 <tr>
                                                     <td>{invoiceData.dispatchedThrough || ''}</td>
                                                     <td>{invoiceData.destination || ''}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td colSpan="2">Terms of Delivery</td>
+                                                    <td className='border-bottom-0 border-end-0' colSpan="2">Terms of Delivery</td>
                                                 </tr>
                                                 <tr>
-                                                    <td colSpan="2" style={{ height: '48px' }}>{invoiceData.termsOfDelivery || ''}</td>
+                                                    <td colSpan="2" className='border-end-0' style={{ height: '48px' }}>{invoiceData.termsOfDelivery || ''}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -1074,22 +1073,26 @@ const Invoice = () => {
                                     </tr>
                                 ))}
                                 <tr>
-                                    <td colSpan="6" style={{ textAlign: 'right', fontStyle: 'italic' }}>OUTPUT IGST @ {invoiceData.taxRate}%</td>
+                                    <td colSpan="2" style={{ textAlign: 'right', fontStyle: 'italic' }}>OUTPUT IGST </td>
+                                    <td></td>
+                                    <td></td>
+                                    <td className='text-end'> {invoiceData.taxRate}%</td>
+                                    <td></td>
                                     <td style={{ textAlign: 'right' }}>{calculateTax().toFixed(2)}</td>
                                 </tr>
-                                <tr style={{ height: '35px' }}>
-                                    <td colSpan="7"></td>
-                                </tr>
+
                                 <tr className={styles.totalRow}>
-                                    <td colSpan="3"><strong>Total</strong></td>
+                                    <td colSpan="2" className='text-end'><strong>Total</strong></td>
+                                    <td></td>
                                     <td style={{ textAlign: 'center' }}><strong>{invoiceData.items.reduce((sum, item) => sum + item.quantity, 0)}</strong></td>
-                                    <td colSpan="2"></td>
+                                    <td colSpan=""></td>
+                                    <td>    </td>
                                     <td style={{ textAlign: 'right' }}><strong>₹ {calculateTotal().toFixed(2)}</strong></td>
                                 </tr>
                                 <tr>
                                     <td colSpan="7">
                                         <div className={styles.amountLabel}>Amount Chargeable (in words)</div>
-                                        <div className={styles.amountText}><strong>{numberToWords(calculateTotal())}</strong></div>
+                                        <div className={styles.amountText}><strong>INR {numberToWords(calculateTotal())}</strong></div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -1120,16 +1123,16 @@ const Invoice = () => {
                                     </tr>
                                 ))}
                                 <tr className={styles.totalRow}>
-                                    <td><strong>Total</strong></td>
+                                    <td className='text-end'><strong>Total</strong></td>
                                     <td style={{ textAlign: 'right' }}><strong>{calculateSubtotal().toFixed(2)}</strong></td>
                                     <td></td>
                                     <td style={{ textAlign: 'right' }}><strong>{calculateTax().toFixed(2)}</strong></td>
                                     <td style={{ textAlign: 'right' }}><strong>{calculateTax().toFixed(2)}</strong></td>
                                 </tr>
                                 <tr>
-                                    <td colSpan="5">
-                                        <span className={styles.taxAmountLabel}>Tax Amount (in words) : </span>
-                                        <span className={styles.taxAmountText}><strong>{numberToWords(calculateTax())}</strong></span>
+                                    <td colSpan="5" className='border-bottom-0'>
+                                        <span className={` ${styles.taxAmountLabel}  border-bottom-0`}>Tax Amount (in words) : </span>
+                                        <span className={` ${styles.taxAmountText} border-bottom-0`}><strong>{numberToWords(calculateTax())}</strong></span>
                                     </td>
                                 </tr>
                             </tbody>
@@ -1139,13 +1142,13 @@ const Invoice = () => {
                         <table className={styles.mainInvoiceTable}>
                             <tbody>
                                 <tr>
-                                    <td style={{ width: '50%', verticalAlign: 'top' }}>
+                                    <td style={{ width: '50%', verticalAlign: 'top' }} className='border-top-0'>
                                         <div className={styles.declarationTitle}>Declaration</div>
                                         <div className={styles.declarationText}>
                                             We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.
                                         </div>
                                     </td>
-                                    <td style={{ width: '50%', verticalAlign: 'top', textAlign: 'right' }}>
+                                    <td style={{ width: '50%', verticalAlign: 'top', textAlign: 'right' }} className=''>
                                         <div className={styles.forCompany}>for {invoiceData.sellerName || 'Sense Projects Private Limited'}</div>
                                         <div className={styles.signatureArea}>
                                             <img src="/img/signature.png" alt="Signature" className={styles.signatureImg} />

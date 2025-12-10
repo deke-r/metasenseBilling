@@ -211,25 +211,27 @@
 }
 
 .irnSection {
-    flex: 0 0 35%;
-    font-size: 6.5pt;
+    flex: 0 0 50%;
+    font-size: 7.5pt;
     padding-right: 8px;
+    align-self: flex-end;
+    text-align: left;
 }
 
 .irnLabel {
-    font-weight: bold;
-    margin-bottom: 1px;
+    /* Font weight removed from here, handled in JSX */
+    margin-bottom: 2px;
 }
 
 .irnValue {
-    font-size: 5.5pt;
+    font-size: 7.5pt;
     word-break: break-all;
     margin-bottom: 2px;
     line-height: 1.1;
 }
 
 .askDetails {
-    font-size: 6.5pt;
+    font-size: 7.5pt;
     line-height: 1.2;
 }
 
@@ -238,11 +240,9 @@
 }
 
 .titleSection {
-    flex: 0 0 30%;
+    width: 100%;
     text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    margin-bottom: 5px;
 }
 
 .taxInvoiceTitle {
@@ -267,7 +267,7 @@
 .qrCode {
     width: 85px;
     height: 85px;
-    border: 0.8px solid #000;
+    /* border: 0.8px solid #000; */
 }
 
 /* Tax Invoice Body */
