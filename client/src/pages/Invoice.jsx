@@ -357,7 +357,7 @@ const Invoice = () => {
                                     />
                                 </div>
                                 <div className="col-md-4">
-                                    <label className={styles.formLabel}>Ask No.</label>
+                                    <label className={styles.formLabel}>Ack No.</label>
                                     <input
                                         type="text"
                                         className={styles.formInput}
@@ -367,7 +367,7 @@ const Invoice = () => {
                                     />
                                 </div>
                                 <div className="col-md-4">
-                                    <label className={styles.formLabel}>Ask Date</label>
+                                    <label className={styles.formLabel}>Ack Date</label>
                                     <input
                                         type="date"
                                         className={styles.formInput}

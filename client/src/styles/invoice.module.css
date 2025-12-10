@@ -212,7 +212,7 @@
 
 .irnSection {
     flex: 0 0 50%;
-    font-size: 7.5pt;
+    font-size: 9.5pt;
     padding-right: 8px;
     align-self: flex-end;
     text-align: left;
@@ -224,14 +224,14 @@
 }
 
 .irnValue {
-    font-size: 7.5pt;
+    font-size: 9.5pt;
     word-break: break-all;
     margin-bottom: 2px;
     line-height: 1.1;
 }
 
 .askDetails {
-    font-size: 7.5pt;
+    font-size: 9.5pt;
     line-height: 1.2;
 }
 
