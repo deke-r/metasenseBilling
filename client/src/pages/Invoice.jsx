@@ -1064,16 +1064,16 @@ const Invoice = () => {
                                 {invoiceData.items.map((item, index) => (
                                     <tr key={index}>
                                         <td style={{ textAlign: 'center' }}>{index + 1}</td>
-                                        <td style={{ textAlign: 'left' }}>{item.description || 'Item'}</td>
+                                        <td style={{ textAlign: 'left', textTransform: 'capitalize' }}><span className={styles.semiBold}>{item.description || 'Item'}</span></td>
                                         <td style={{ textAlign: 'center' }}>{item.hsnSac || ''}</td>
-                                        <td style={{ textAlign: 'center' }}>{item.quantity}</td>
+                                        <td style={{ textAlign: 'center' }}><span className={styles.semiBold}>{item.quantity}</span></td>
                                         <td style={{ textAlign: 'right' }}>{item.unitPrice.toFixed(2)}</td>
                                         <td style={{ textAlign: 'center' }}>{item.perUnit}</td>
-                                        <td style={{ textAlign: 'right' }}>{(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                        <td style={{ textAlign: 'right' }}><span className={styles.semiBold}>{(item.quantity * item.unitPrice).toFixed(2)}</span></td>
                                     </tr>
                                 ))}
                                 <tr>
-                                    <td colSpan="2" style={{ textAlign: 'right', fontStyle: 'italic' }}>OUTPUT IGST </td>
+                                    <td colSpan="2" style={{ textAlign: 'right', fontStyle: 'italic' }}><span className={styles.semiBold}>OUTPUT IGST</span></td>
                                     <td></td>
                                     <td></td>
                                     <td className='text-end'> {invoiceData.taxRate}%</td>
@@ -1149,12 +1149,14 @@ const Invoice = () => {
                                         </div>
                                     </td>
                                     <td style={{ width: '50%', verticalAlign: 'top', textAlign: 'right' }} className=''>
-                                        <div className={styles.forCompany}>for {invoiceData.sellerName || 'Sense Projects Private Limited'}</div>
-                                        {/* <div className={styles.signatureArea}>
-                                            <img src="/img/signature.png" alt="Signature" className={styles.signatureImg} />
-                                            <img src="/img/stamp.png" alt="Stamp" className={styles.stampImg} />
-                                        </div> */}
-                                        <div className={styles.authorizedSignatory}>Authorised Signatory</div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100px' }}>
+                                            <div className={styles.forCompany}>for {invoiceData.sellerName || 'Sense Projects Private Limited'}</div>
+                                            {/* <div className={styles.signatureArea}>
+                                                <img src="/img/signature.png" alt="Signature" className={styles.signatureImg} />
+                                                <img src="/img/stamp.png" alt="Stamp" className={styles.stampImg} />
+                                            </div> */}
+                                            <div className={styles.authorizedSignatory}>Authorised Signatory</div>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>

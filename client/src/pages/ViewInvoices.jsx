@@ -392,17 +392,17 @@ const ViewInvoices = () => {
                                     {selectedInvoice.items.map((item, index) => (
                                         <tr key={index}>
                                             <td className='border-bottom-0 border-top-0' style={{ textAlign: 'center' }}>{index + 1}</td>
-                                            <td className='border-bottom-0 border-top-0' style={{ textAlign: 'left' }}>{item.description || 'Item'}</td>
+                                            <td className='border-bottom-0 border-top-0' style={{ textAlign: 'left', textTransform: 'capitalize' }}><span className={invoiceStyles.semiBold}>{item.description || 'Item'}</span></td>
                                             <td className='border-bottom-0 border-top-0' style={{ textAlign: 'center' }}>{item.hsnSac || ''}</td>
-                                            <td className='border-bottom-0 border-top-0' style={{ textAlign: 'center' }}>{item.quantity}</td>
+                                            <td className='border-bottom-0 border-top-0' style={{ textAlign: 'center' }}><span className={invoiceStyles.semiBold}>{item.quantity}</span></td>
                                             <td className='border-bottom-0 border-top-0' style={{ textAlign: 'right' }}>{item.unitPrice.toFixed(2)}</td>
                                             <td className='border-bottom-0 border-top-0' style={{ textAlign: 'center' }}>{item.perUnit}</td>
-                                            <td className='border-bottom-0 border-top-0' style={{ textAlign: 'right' }}>{(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                            <td className='border-bottom-0 border-top-0' style={{ textAlign: 'right' }}><span className={invoiceStyles.semiBold}>{(item.quantity * item.unitPrice).toFixed(2)}</span></td>
                                         </tr>
                                     ))}
                                     <tr>
                                         <td className='border-top-0'></td>
-                                        <td colSpan="" className='border-top-0' style={{ textAlign: 'right', fontStyle: 'italic' }}>OUTPUT IGST </td>
+                                        <td colSpan="" className='border-top-0' style={{ textAlign: 'right', fontStyle: 'italic' }}><span className={invoiceStyles.semiBold}>OUTPUT IGST</span></td>
                                         <td className='border-top-0'></td>
                                         <td className='border-top-0'></td>
                                         <td className='text-end border-top-0'> {selectedInvoice.taxRate}%</td>
@@ -479,12 +479,14 @@ const ViewInvoices = () => {
                                             </div>
                                         </td>
                                         <td style={{ width: '50%', verticalAlign: 'top', textAlign: 'right' }} className=''>
-                                            <div className={invoiceStyles.forCompany}>for {selectedInvoice.sellerName || 'Sense Projects Private Limited'}</div>
-                                            {/* <div className={invoiceStyles.signatureArea}>
-                                                <img src="/img/signature.png" alt="Signature" className={invoiceStyles.signatureImg} />
-                                                <img src="/img/stamp.png" alt="Stamp" className={invoiceStyles.stampImg} />
-                                            </div> */}
-                                            <div className={invoiceStyles.authorizedSignatory}>Authorised Signatory</div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100px' }}>
+                                                <div className={invoiceStyles.forCompany}>for {selectedInvoice.sellerName || 'Sense Projects Private Limited'}</div>
+                                                {/* <div className={invoiceStyles.signatureArea}>
+                                                    <img src="/img/signature.png" alt="Signature" className={invoiceStyles.signatureImg} />
+                                                    <img src="/img/stamp.png" alt="Stamp" className={invoiceStyles.stampImg} />
+                                                </div> */}
+                                                <div className={invoiceStyles.authorizedSignatory}>Authorised Signatory</div>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -496,7 +498,7 @@ const ViewInvoices = () => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div >
             )}
         </>
     )
