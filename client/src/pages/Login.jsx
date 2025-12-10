@@ -20,10 +20,11 @@ const Login = () => {
     useEffect(() => {
         if (isTokenValid()) {
             const role = jwtDecode(localStorage.getItem('token')).role
-            if (role === 'admin') {
-                navigate('/dashboard/admin', { replace: true })
+            if (role === 'AM') {
+                navigate('/dashboard/am', { replace: true })
+            } else if (role === 'MG') {
+                navigate('/dashboard/mg', { replace: true })
             }
-
         }
     }, [navigate])
 
@@ -38,11 +39,19 @@ const Login = () => {
             const token = res.data.token
             localStorage.setItem('token', token);
 
-            const decodedToken = jwtDecode(token)
-            const role = decodedToken.role
+            // Store user data
+            localStorage.setItem('userName', res.data.name);
+            localStorage.setItem('userRole', res.data.role);
+            if (res.data.last_login) {
+                localStorage.setItem('lastLogin', res.data.last_login);
+            }
 
-            if (role === 'admin') {
-                navigate('/dashboard/admin')
+            const role = res.data.role
+
+            if (role === 'AM') {
+                navigate('/dashboard/am')
+            } else if (role === 'MG') {
+                navigate('/dashboard/mg')
             }
 
         } catch (error) {

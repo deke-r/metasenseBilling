@@ -199,7 +199,7 @@ const ViewInvoices = () => {
                     <div className="container">
                         <a
                             href="#"
-                            onClick={(e) => { e.preventDefault(); navigate('/dashboard/admin') }}
+                            onClick={(e) => { e.preventDefault(); const role = localStorage.getItem('userRole') || 'AM'; navigate(`/dashboard/${role.toLowerCase()}`) }}
                             className={styles.backButton}
                         >
                             <ArrowLeft size={18} />

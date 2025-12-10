@@ -7,7 +7,6 @@ var jwt = require('jsonwebtoken');
 router.post('/login', async (req, res) => {
     try {
 
-
         console.log(req.body)
 
         const { email, password } = req.body;
@@ -27,16 +26,25 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: "Invalid email or password" })
         }
 
+        // Update last_login timestamp
+        const updateLoginQry = 'UPDATE users SET last_login = NOW() WHERE user_id = ?';
+        await con.query(updateLoginQry, [rows[0].user_id]);
 
         const token = jwt.sign(
-            { name: rows[0].name, email: rows[0].email, role: rows[0].role },
+            { user_id: rows[0].user_id, name: rows[0].name, email: rows[0].email, role: rows[0].role },
             process.env.SECRET_KEY,
             { expiresIn: 60 * 60 }
         );
 
 
 
-        res.status(200).json({ message: "Login successful", token })
+        res.status(200).json({
+            message: "Login successful",
+            token,
+            role: rows[0].role,
+            name: rows[0].name,
+            last_login: rows[0].last_login
+        })
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: "Internal server error" })

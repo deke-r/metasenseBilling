@@ -13,7 +13,15 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route
-            path="/dashboard/admin"
+            path="/dashboard/am"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/mg"
             element={
               <ProtectedRoute>
                 <Dashboard />

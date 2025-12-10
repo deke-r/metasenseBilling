@@ -42,7 +42,8 @@ const ChangePassword = () => {
 
             // Redirect to dashboard after 2 seconds
             setTimeout(() => {
-                navigate('/dashboard/admin')
+                const role = localStorage.getItem('userRole') || 'AM'
+                navigate(`/dashboard/${role.toLowerCase()}`)
             }, 2000)
 
         } catch (error) {
@@ -61,7 +62,7 @@ const ChangePassword = () => {
                 <div className="container">
                     <a
                         href="#"
-                        onClick={(e) => { e.preventDefault(); navigate('/dashboard/admin') }}
+                        onClick={(e) => { e.preventDefault(); const role = localStorage.getItem('userRole') || 'AM'; navigate(`/dashboard/${role.toLowerCase()}`) }}
                         className={styles.backButton}
                     >
                         <ArrowLeft size={18} />

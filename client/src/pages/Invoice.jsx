@@ -353,7 +353,8 @@ const Invoice = () => {
 
             // Optionally redirect back to dashboard after a delay
             setTimeout(() => {
-                navigate('/dashboard/admin')
+                const role = localStorage.getItem('userRole') || 'AM'
+                navigate(`/dashboard/${role.toLowerCase()}`)
             }, 2000)
         } catch (error) {
             console.error('Error saving invoice:', error)
@@ -371,7 +372,7 @@ const Invoice = () => {
                 <div className="container">
                     <a
                         href="#"
-                        onClick={(e) => { e.preventDefault(); navigate('/dashboard/admin') }}
+                        onClick={(e) => { e.preventDefault(); const role = localStorage.getItem('userRole') || 'AM'; navigate(`/dashboard/${role.toLowerCase()}`) }}
                         className={styles.backButton}
                     >
                         <ArrowLeft size={18} />
