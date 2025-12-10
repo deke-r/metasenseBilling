@@ -15,7 +15,7 @@ const Navbar = () => {
         if (token) {
             const decoded = jwtDecode(token)
             setUserEmail(decoded.email)
-    
+
             setUserName(decoded.name)
         }
     }, [])
@@ -40,6 +40,18 @@ const Navbar = () => {
                             <p className={styles.welcomeText} style={{ fontSize: '0.8rem', opacity: 0.7 }}>
                                 {userEmail}
                             </p>
+                            {localStorage.getItem('lastLogin') && (
+                                <p className={styles.welcomeText} style={{ fontSize: '0.75rem', opacity: 0.6 }}>
+                                    Current Login: {new Date(localStorage.getItem('lastLogin')).toLocaleString('en-IN', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: true
+                                    })}
+                                </p>
+                            )}
                         </div>
                         <button
                             onClick={handleLogout}

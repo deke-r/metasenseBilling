@@ -1,9 +1,15 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import MGDashboard from "./pages/MGDashboard";
 import Invoice from "./pages/Invoice";
 import ViewInvoices from "./pages/ViewInvoices";
+import ViewApprovals from "./pages/ViewApprovals";
+import ViewHistory from "./pages/ViewHistory";
 import ChangePassword from "./pages/ChangePassword";
+import PaymentForm from "./pages/PaymentForm";
+import ReceiptForm from "./pages/ReceiptForm";
+import AccountInvoiceForm from "./pages/AccountInvoiceForm";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
@@ -24,7 +30,7 @@ const App = () => {
             path="/dashboard/mg"
             element={
               <ProtectedRoute>
-                <Dashboard />
+                <MGDashboard />
               </ProtectedRoute>
             }
           />
@@ -49,6 +55,46 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <ChangePassword />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payment/new"
+            element={
+              <ProtectedRoute>
+                <PaymentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/receipt/new"
+            element={
+              <ProtectedRoute>
+                <ReceiptForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/account-invoice/new"
+            element={
+              <ProtectedRoute>
+                <AccountInvoiceForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/view-approvals"
+            element={
+              <ProtectedRoute>
+                <ViewApprovals />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/view-history"
+            element={
+              <ProtectedRoute>
+                <ViewHistory />
               </ProtectedRoute>
             }
           />

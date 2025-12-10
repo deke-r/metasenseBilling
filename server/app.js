@@ -11,6 +11,10 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const authRouter = require("./router/auth");
+const paymentsRouter = require("./router/payments");
+const receiptsRouter = require("./router/receipts");
+const accountInvoicesRouter = require("./router/accountInvoices");
+const usersRouter = require("./router/users");
 
 // TEST DB
 const initdb = async () => {
@@ -33,9 +37,16 @@ app.get("/api/test", (req, res) => {
     });
 });
 
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
+
 // Mount routes
 app.use('/api', router);
 app.use('/api/auth', authRouter);
+app.use('/api', paymentsRouter);
+app.use('/api', receiptsRouter);
+app.use('/api', accountInvoicesRouter);
+app.use('/api', usersRouter);
 
 app.listen(process.env.PORT, () => {
     console.log(`Server is running on port ${process.env.PORT}`);

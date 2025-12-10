@@ -100,16 +100,28 @@ const Dashboard = () => {
             path: '/view-invoices'
         },
         {
+            title: 'Create Payment',
+            description: 'Submit payment entry',
+            icon: <DollarSign />,
+            path: '/payment/new'
+        },
+        {
+            title: 'Create Receipt',
+            description: 'Submit receipt entry',
+            icon: <FileBarChart />,
+            path: '/receipt/new'
+        },
+        {
+            title: 'Create Account Invoice',
+            description: 'Submit account invoice',
+            icon: <CreditCard />,
+            path: '/account-invoice/new'
+        },
+        {
             title: 'Change Password',
             description: 'Update your password',
             icon: <Lock />,
             path: '/change-password'
-        },
-        {
-            title: 'Settings',
-            description: 'Manage preferences',
-            icon: <Settings />,
-            path: '/settings'
         }
     ]
 
