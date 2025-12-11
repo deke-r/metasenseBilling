@@ -41,3 +41,25 @@
 .f_48 { font-size: clamp(46px, 3.3vw, 48px); }
 .f_49 { font-size: clamp(47px, 3.4vw, 49px); }
 .f_50 { font-size: clamp(48px, 3.5vw, 50px); }
+
+
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #eef5ff;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #0C4379;
+  border-radius: 0px;
+  border: 2px solid #eef5ff;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #083056;
+}

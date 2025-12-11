@@ -970,7 +970,7 @@
 }
 
 .btnResubmitCustom {
-    background: #10b981;
+    background: #5E9C76;
     color: white;
     border: none;
     padding: 0.75rem 1rem;
@@ -983,11 +983,11 @@
 }
 
 .btnResubmitCustom:hover {
-    background: #059669;
+    background: #4a7d5e;
 }
 
 .btnRejectCustom {
-    background: #ef4444;
+    background: #cc0001;
     color: white;
     border: none;
     padding: 0.75rem 1rem;
@@ -1000,5 +1000,5 @@
 }
 
 .btnRejectCustom:hover {
-    background: #dc2626;
+    background: #a30001;
 }
