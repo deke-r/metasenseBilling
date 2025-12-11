@@ -226,6 +226,11 @@
     color: #92400e;
 }
 
+.badgeResubmit {
+    background: #fed7aa;
+    color: #9a3412;
+}
+
 /* Loading State */
 .loadingState {
     text-align: center;
@@ -338,4 +343,662 @@
     outline: none;
     border-color: #0C4379;
     box-shadow: 0 0 0 3px rgba(12, 67, 121, 0.1);
+}
+
+/* Edit Button */
+.editButton {
+    background: #0C4379;
+    color: white;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.editButton:hover {
+    background: #083056;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* View Button */
+.btnView {
+    background: #0C4379;
+    color: white;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.btnView:hover {
+    background: #083056;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Resubmit Button */
+.btnResubmit {
+    background: #f59e0b;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 0.5rem;
+}
+
+.btnResubmit:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Details Modal */
+.detailsGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.detailRow {
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    background: #fed7aa;
+    color: #9a3412;
+}
+
+/* Loading State */
+.loadingState {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6b7280;
+}
+
+/* Modal Styling */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+
+.modalContent {
+    background: white;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modalHeader {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modalTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.modalBody {
+    padding: 1.5rem;
+}
+
+.modalFooter {
+    padding: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.btnSecondary {
+    background: #f3f4f6;
+    color: #374151;
+    border: none;
+    padding: 0.625rem 1.25rem;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btnSecondary:hover {
+    background: #e5e7eb;
+}
+
+.btnDanger {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 0.625rem 1.25rem;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btnDanger:hover {
+    background: #dc2626;
+}
+
+.btnClose {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 0;
+    line-height: 1;
+}
+
+.btnClose:hover {
+    color: #1f2937;
+}
+
+.textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: all 0.2s;
+}
+
+.textarea:focus {
+    outline: none;
+    border-color: #0C4379;
+    box-shadow: 0 0 0 3px rgba(12, 67, 121, 0.1);
+}
+
+/* Edit Button */
+.editButton {
+    background: #0C4379;
+    color: white;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.editButton:hover {
+    background: #083056;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* View Button */
+.btnView {
+    background: transparent;
+    color: #0C4379;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.btnView:hover {
+    background-color: transparent;
+    color: #083056;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Resubmit Button */
+.btnResubmit {
+    background: #f59e0b;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 0.5rem;
+}
+
+.btnResubmit:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Details Modal */
+.detailsGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.detailRow {
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.detailRow strong {
+    color: #374151;
+    margin-right: 0.5rem;
+}
+
+/* Custom Offcanvas Styles - Minimal Professional Design */
+.offcanvasCustom {
+    width: 550px !important;
+    border-left: 1px solid #d1d5db;
+}
+
+.offcanvasHeader {
+    background: #ffffff;
+    border-bottom: 1px solid #d1d5db;
+    padding: 1rem 1.5rem;
+}
+
+.offcanvasTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.offcanvasBody {
+    padding: 0;
+    background: #ffffff;
+}
+
+.detailSection {
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1.5rem;
+}
+
+.detailSection:last-of-type {
+    border-bottom: none;
+}
+
+/* Two Column Grid Layout */
+.detailGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem 1.5rem;
+}
+
+.detailItem {
+    display: flex;
+    flex-direction: column;
+}
+
+.detailItemFull {
+    grid-column: 1 / -1;
+}
+
+.detailLabel {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.375rem;
+}
+
+.detailValue {
+    font-size: 0.875rem;
+    color: #1f2937;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.pdfButton {
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    padding: 0.75rem;
+    border-radius: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.pdfButton:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.remarksSection {
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1.5rem;
+}
+
+.remarksLabel {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.remarksTextarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0;
+    font-size: 0.875rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.15s;
+    min-height: 90px;
+    background: #ffffff;
+}
+
+.remarksTextarea:focus {
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.editButton:hover {
+    background: #083056;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* View Button */
+.btnView {
+    background: transparent;
+    color: #0C4379;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.btnView:hover {
+    background-color: transparent;
+    color: #083056;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Resubmit Button */
+.btnResubmit {
+    background: #f59e0b;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-right: 0.5rem;
+}
+
+.btnResubmit:hover {
+    background: #d97706;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Details Modal */
+.detailsGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.detailRow {
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.detailRow strong {
+    color: #374151;
+    margin-right: 0.5rem;
+}
+
+/* Custom Offcanvas Styles - Minimal Professional Design */
+.offcanvasCustom {
+    width: 550px !important;
+    border-left: 1px solid #d1d5db;
+}
+
+.offcanvasHeader {
+    background: #ffffff;
+    border-bottom: 1px solid #d1d5db;
+    padding: 1rem 1.5rem;
+}
+
+.offcanvasTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.offcanvasBody {
+    padding: 0;
+    background: #ffffff;
+}
+
+.detailSection {
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1.5rem;
+}
+
+.detailSection:last-of-type {
+    border-bottom: none;
+}
+
+/* Two Column Grid Layout */
+.detailGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem 1.5rem;
+}
+
+.detailItem {
+    display: flex;
+    flex-direction: column;
+}
+
+.detailItemFull {
+    grid-column: 1 / -1;
+}
+
+.detailLabel {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.375rem;
+}
+
+.detailValue {
+    font-size: 0.875rem;
+    color: #1f2937;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.pdfButton {
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    color: #374151;
+    padding: 0.75rem;
+    border-radius: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.pdfButton:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.remarksSection {
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1.5rem;
+}
+
+.remarksLabel {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.remarksTextarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0;
+    font-size: 0.875rem;
+    font-family: inherit;
+    resize: vertical;
+    transition: border-color 0.15s;
+    min-height: 90px;
+    background: #ffffff;
+}
+
+.remarksTextarea:focus {
+    outline: none;
+    border-color: #6b7280;
+}
+
+.actionsSection {
+    display: flex;
+    flex-direction: row;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+}
+
+.btnApproveCustom {
+    background: #0C4379;
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    flex: 1;
+}
+
+.btnApproveCustom:hover {
+    background: #083056;
+}
+
+.btnResubmitCustom {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    flex: 1;
+}
+
+.btnResubmitCustom:hover {
+    background: #059669;
+}
+
+.btnRejectCustom {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    flex: 1;
+}
+
+.btnRejectCustom:hover {
+    background: #dc2626;
 }

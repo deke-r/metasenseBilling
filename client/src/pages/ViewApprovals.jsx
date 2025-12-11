@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Eye, FileText } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import styles from '../styles/approvals.module.css'
 import axios from 'axios'
@@ -13,8 +13,10 @@ const ViewApprovals = () => {
     const [receipts, setReceipts] = useState([])
     const [accountInvoices, setAccountInvoices] = useState([])
     const [loading, setLoading] = useState(true)
-    const [remarkModal, setRemarkModal] = useState({ show: false, id: null, type: '', action: '' })
+    const [selectedItem, setSelectedItem] = useState(null)
+    const [selectedType, setSelectedType] = useState('')
     const [remark, setRemark] = useState('')
+    const [showOffcanvas, setShowOffcanvas] = useState(false)
 
     useEffect(() => {
         fetchAllData()
@@ -42,52 +44,176 @@ const ViewApprovals = () => {
         }
     }
 
-    const handleApprove = async (id, type) => {
-        try {
-            const token = localStorage.getItem('token')
-            await axios.post(
-                `${import.meta.env.VITE_BASE_URL}/${type}/${id}/approve`,
-                {},
-                {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                }
-            )
-            toast.success('Approved successfully!')
-            fetchAllData()
-        } catch (error) {
-            console.error('Error approving:', error)
-            toast.error('Failed to approve')
-        }
+    const handleViewDetails = (item, type) => {
+        setSelectedItem(item)
+        setSelectedType(type)
+        setRemark('')
+        setShowOffcanvas(true)
     }
 
-    const handleReject = async () => {
+    const handleAction = async (action) => {
         if (!remark.trim()) {
-            toast.error('Please provide a remark')
+            toast.error('Remark is mandatory for all actions')
             return
         }
 
         try {
             const token = localStorage.getItem('token')
+            const endpoint = action === 'approve' ? 'approve' :
+                action === 'reject' ? 'reject' : 'resubmit'
+
             await axios.post(
-                `${import.meta.env.VITE_BASE_URL}/${remarkModal.type}/${remarkModal.id}/reject`,
+                `${import.meta.env.VITE_BASE_URL}/${selectedType}/${selectedItem.id}/${endpoint}`,
                 { remark },
                 {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }
             )
-            toast.success('Rejected successfully!')
-            setRemarkModal({ show: false, id: null, type: '', action: '' })
+
+            const actionText = action === 'approve' ? 'Approved' :
+                action === 'reject' ? 'Rejected' : 'Sent for re-edit'
+            toast.success(`${actionText} successfully!`)
+            setShowOffcanvas(false)
+            setSelectedItem(null)
             setRemark('')
             fetchAllData()
         } catch (error) {
-            console.error('Error rejecting:', error)
-            toast.error('Failed to reject')
+            console.error(`Error ${action}ing:`, error)
+            toast.error(`Failed to ${action}`)
         }
     }
 
-    const openRemarkModal = (id, type, action) => {
-        setRemarkModal({ show: true, id, type, action })
-        setRemark('')
+    const viewPDF = (pdfPath) => {
+        if (pdfPath) {
+            window.open(`${import.meta.env.VITE_PDF_URL}${pdfPath}`, '_blank')
+        } else {
+            toast.error('No PDF available')
+        }
+    }
+
+    const renderDetailFields = () => {
+        if (!selectedItem) return null
+
+        if (selectedType === 'payments') {
+            return (
+                <div className={styles.detailGrid}>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Payment No</span>
+                        <div className={styles.detailValue}>{selectedItem.payment_no}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Date</span>
+                        <div className={styles.detailValue}>{new Date(selectedItem.date).toLocaleDateString('en-IN')}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Party Name</span>
+                        <div className={styles.detailValue}>{selectedItem.party_name}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Amount</span>
+                        <div className={styles.detailValue}>₹{parseFloat(selectedItem.amount).toLocaleString('en-IN')}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Transaction Type</span>
+                        <div className={styles.detailValue}>{selectedItem.transaction_type || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Category</span>
+                        <div className={styles.detailValue}>{selectedItem.payment_category || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Center</span>
+                        <div className={styles.detailValue}>{selectedItem.payment_center || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Debit To</span>
+                        <div className={styles.detailValue}>{selectedItem.debit_to || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Credit To</span>
+                        <div className={styles.detailValue}>{selectedItem.credit_to || '-'}</div>
+                    </div>
+                    <div className={`${styles.detailItem} ${styles.detailItemFull}`}>
+                        <span className={styles.detailLabel}>Remarks</span>
+                        <div className={styles.detailValue}>{selectedItem.remarks || '-'}</div>
+                    </div>
+                </div>
+            )
+        } else if (selectedType === 'receipts') {
+            return (
+                <div className={styles.detailGrid}>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Receipt No</span>
+                        <div className={styles.detailValue}>{selectedItem.receipt_no}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Date</span>
+                        <div className={styles.detailValue}>{new Date(selectedItem.date).toLocaleDateString('en-IN')}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Party Name</span>
+                        <div className={styles.detailValue}>{selectedItem.party_name}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Amount</span>
+                        <div className={styles.detailValue}>₹{parseFloat(selectedItem.amount).toLocaleString('en-IN')}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>PO/WO No</span>
+                        <div className={styles.detailValue}>{selectedItem.po_wo_no || '-'}</div>
+                    </div>
+                    <div className={`${styles.detailItem} ${styles.detailItemFull}`}>
+                        <span className={styles.detailLabel}>Remarks</span>
+                        <div className={styles.detailValue}>{selectedItem.remarks || '-'}</div>
+                    </div>
+                </div>
+            )
+        } else {
+            return (
+                <div className={styles.detailGrid}>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Invoice No</span>
+                        <div className={styles.detailValue}>{selectedItem.invoice_no}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Date</span>
+                        <div className={styles.detailValue}>{new Date(selectedItem.date).toLocaleDateString('en-IN')}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Party Name</span>
+                        <div className={styles.detailValue}>{selectedItem.party_name}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Amount</span>
+                        <div className={styles.detailValue}>₹{parseFloat(selectedItem.amount).toLocaleString('en-IN')}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>PO/WO No</span>
+                        <div className={styles.detailValue}>{selectedItem.po_wo_no || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Accounting Entry Type</span>
+                        <div className={styles.detailValue}>{selectedItem.accounting_entry_type || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Debit To</span>
+                        <div className={styles.detailValue}>{selectedItem.debit_to || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Credit To</span>
+                        <div className={styles.detailValue}>{selectedItem.credit_to || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Ledger Balance</span>
+                        <div className={styles.detailValue}>{selectedItem.ledger_balance || '-'}</div>
+                    </div>
+                    <div className={`${styles.detailItem} ${styles.detailItemFull}`}>
+                        <span className={styles.detailLabel}>Remarks</span>
+                        <div className={styles.detailValue}>{selectedItem.remarks || '-'}</div>
+                    </div>
+                </div>
+            )
+        }
     }
 
     const renderPayments = () => (
@@ -118,16 +244,11 @@ const ViewApprovals = () => {
                                 <td>{payment.created_by_name}</td>
                                 <td>
                                     <button
-                                        className={styles.btnApprove}
-                                        onClick={() => handleApprove(payment.id, 'payments')}
+                                        className={styles.btnView}
+                                        onClick={() => handleViewDetails(payment, 'payments')}
+                                        title="View Details"
                                     >
-                                        Approve
-                                    </button>
-                                    <button
-                                        className={styles.btnReject}
-                                        onClick={() => openRemarkModal(payment.id, 'payments', 'reject')}
-                                    >
-                                        Reject
+                                        <Eye size={16} /> 
                                     </button>
                                 </td>
                             </tr>
@@ -166,16 +287,11 @@ const ViewApprovals = () => {
                                 <td>{receipt.created_by_name}</td>
                                 <td>
                                     <button
-                                        className={styles.btnApprove}
-                                        onClick={() => handleApprove(receipt.id, 'receipts')}
+                                        className={styles.btnView}
+                                        onClick={() => handleViewDetails(receipt, 'receipts')}
+                                        title="View Details"
                                     >
-                                        Approve
-                                    </button>
-                                    <button
-                                        className={styles.btnReject}
-                                        onClick={() => openRemarkModal(receipt.id, 'receipts', 'reject')}
-                                    >
-                                        Reject
+                                        <Eye size={16} /> 
                                     </button>
                                 </td>
                             </tr>
@@ -214,16 +330,11 @@ const ViewApprovals = () => {
                                 <td>{invoice.created_by_name}</td>
                                 <td>
                                     <button
-                                        className={styles.btnApprove}
-                                        onClick={() => handleApprove(invoice.id, 'account-invoices')}
+                                        className={styles.btnView}
+                                        onClick={() => handleViewDetails(invoice, 'account-invoices')}
+                                        title="View Details"
                                     >
-                                        Approve
-                                    </button>
-                                    <button
-                                        className={styles.btnReject}
-                                        onClick={() => openRemarkModal(invoice.id, 'account-invoices', 'reject')}
-                                    >
-                                        Reject
+                                        <Eye size={16} /> 
                                     </button>
                                 </td>
                             </tr>
@@ -298,46 +409,86 @@ const ViewApprovals = () => {
                 </div>
             </div>
 
-            {/* Remark Modal */}
-            {remarkModal.show && (
-                <div className={styles.modalOverlay}>
-                    <div className={styles.modalContent}>
-                        <div className={styles.modalHeader}>
-                            <h5 className={styles.modalTitle}>Reject Entry</h5>
-                            <button
-                                type="button"
-                                className={styles.btnClose}
-                                onClick={() => setRemarkModal({ show: false, id: null, type: '', action: '' })}
-                            >&times;</button>
-                        </div>
-                        <div className={styles.modalBody}>
-                            <label className={styles.formLabel}>Remark *</label>
-                            <textarea
-                                className={styles.textarea}
-                                rows="4"
-                                value={remark}
-                                onChange={(e) => setRemark(e.target.value)}
-                                placeholder="Enter reason for rejection..."
-                            />
-                        </div>
-                        <div className={styles.modalFooter}>
-                            <button
-                                type="button"
-                                className={styles.btnSecondary}
-                                onClick={() => setRemarkModal({ show: false, id: null, type: '', action: '' })}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="button"
-                                className={styles.btnDanger}
-                                onClick={handleReject}
-                            >
-                                Reject
-                            </button>
-                        </div>
-                    </div>
+            {/* Bootstrap Offcanvas with Custom Styling */}
+            <div
+                className={`offcanvas offcanvas-end ${styles.offcanvasCustom} ${showOffcanvas ? 'show' : ''}`}
+                tabIndex="-1"
+                style={{ visibility: showOffcanvas ? 'visible' : 'hidden' }}
+            >
+                <div className={`offcanvas-header ${styles.offcanvasHeader}`}>
+                    <h5 className={`offcanvas-title ${styles.offcanvasTitle}`}>
+                        {selectedType === 'payments' ? 'Payment' :
+                            selectedType === 'receipts' ? 'Receipt' : 'Account Invoice'} Details
+                    </h5>
+                    <button type="button" className="btn-close" onClick={() => setShowOffcanvas(false)}></button>
                 </div>
+                <div className={`offcanvas-body ${styles.offcanvasBody}`}>
+                    {selectedItem && (
+                        <>
+                            {/* Details Section */}
+                            <div className={styles.detailSection}>
+                                {renderDetailFields()}
+                            </div>
+
+                            {/* PDF Button */}
+                            {(selectedItem.file_pdf || selectedItem.invoice_pdf_file) && (
+                                <div className={styles.detailSection}>
+                                    <button
+                                        className={styles.pdfButton}
+                                        onClick={() => viewPDF(selectedItem.file_pdf || selectedItem.invoice_pdf_file)}
+                                    >
+                                        <FileText size={18} />
+                                        View PDF Document
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Remarks Section */}
+                            <div className={styles.remarksSection}>
+                                <label className={styles.remarksLabel}>
+                                    Remarks * (Mandatory)
+                                </label>
+                                <textarea
+                                    className={styles.remarksTextarea}
+                                    value={remark}
+                                    onChange={(e) => setRemark(e.target.value)}
+                                    placeholder="Enter your remarks for this submission..."
+                                />
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className={styles.actionsSection}>
+                                <button
+                                    className={styles.btnApproveCustom}
+                                    onClick={() => handleAction('approve')}
+                                >
+                                    Approve
+                                </button>
+                                <button
+                                    className={styles.btnResubmitCustom}
+                                    onClick={() => handleAction('resubmit')}
+                                >
+                                    Send for Re-edit
+                                </button>
+                                <button
+                                    className={styles.btnRejectCustom}
+                                    onClick={() => handleAction('reject')}
+                                >
+                                    Reject
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+
+            {/* Backdrop */}
+            {showOffcanvas && (
+                <div
+                    className="offcanvas-backdrop fade show"
+                    onClick={() => setShowOffcanvas(false)}
+                    style={{ zIndex: 1040 }}
+                ></div>
             )}
         </div>
     )

@@ -11,7 +11,8 @@ import {
     Settings,
     FileBarChart,
     CreditCard,
-    Receipt
+    Receipt,
+    History
 } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
@@ -139,6 +140,12 @@ const Dashboard = () => {
             description: 'Submit account invoice',
             icon: <CreditCard />,
             path: '/account-invoice/new'
+        },
+        {
+            title: 'View History',
+            description: 'View my submissions',
+            icon: <History />,
+            path: '/am-view-history'
         },
         {
             title: 'Change Password',

@@ -225,13 +225,15 @@ router.post('/payments/:id/approve', verifyToken, async (req, res) => {
             return res.status(403).json({ message: "Only MG can approve payments" });
         }
 
+        const { remark } = req.body;
+
         const query = `
             UPDATE payments 
-            SET status = 'approved', approved_by = ?, approved_at = NOW()
+            SET status = 'approved', approved_by = ?, approved_at = NOW(), mg_remark = ?
             WHERE id = ? AND status = 'pending'
         `;
 
-        const [result] = await con.query(query, [req.user.user_id, req.params.id]);
+        const [result] = await con.query(query, [req.user.user_id, remark || '', req.params.id]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Payment not found or already processed" });
@@ -251,13 +253,15 @@ router.post('/payments/:id/reject', verifyToken, async (req, res) => {
             return res.status(403).json({ message: "Only MG can reject payments" });
         }
 
+        const { remark } = req.body;
+
         const query = `
             UPDATE payments 
-            SET status = 'rejected', approved_by = ?, approved_at = NOW()
+            SET status = 'rejected', approved_by = ?, approved_at = NOW(), mg_remark = ?
             WHERE id = ? AND status = 'pending'
         `;
 
-        const [result] = await con.query(query, [req.user.user_id, req.params.id]);
+        const [result] = await con.query(query, [req.user.user_id, remark || '', req.params.id]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Payment not found or already processed" });
@@ -266,6 +270,34 @@ router.post('/payments/:id/reject', verifyToken, async (req, res) => {
         res.status(200).json({ message: "Payment rejected successfully" });
     } catch (error) {
         console.error('Error rejecting payment:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// Resubmit payment (MG only) - Send back for re-edit
+router.post('/payments/:id/resubmit', verifyToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'MG') {
+            return res.status(403).json({ message: "Only MG can send payments for re-edit" });
+        }
+
+        const { remark } = req.body;
+
+        const query = `
+            UPDATE payments 
+            SET status = 'resubmit', approved_by = ?, approved_at = NOW(), mg_remark = ?
+            WHERE id = ? AND status = 'pending'
+        `;
+
+        const [result] = await con.query(query, [req.user.user_id, remark || '', req.params.id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Payment not found or already processed" });
+        }
+
+        res.status(200).json({ message: "Payment sent for re-edit successfully" });
+    } catch (error) {
+        console.error('Error sending payment for re-edit:', error);
         res.status(500).json({ message: "Internal server error" });
     }
 });

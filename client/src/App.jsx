@@ -6,6 +6,7 @@ import Invoice from "./pages/Invoice";
 import ViewInvoices from "./pages/ViewInvoices";
 import ViewApprovals from "./pages/ViewApprovals";
 import ViewHistory from "./pages/ViewHistory";
+import AMViewHistory from "./pages/AMViewHistory";
 import ChangePassword from "./pages/ChangePassword";
 import PaymentForm from "./pages/PaymentForm";
 import ReceiptForm from "./pages/ReceiptForm";
@@ -95,6 +96,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <ViewHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/am-view-history"
+            element={
+              <ProtectedRoute>
+                <AMViewHistory />
               </ProtectedRoute>
             }
           />

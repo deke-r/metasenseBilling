@@ -184,13 +184,15 @@ router.post('/receipts/:id/approve', verifyToken, async (req, res) => {
             return res.status(403).json({ message: "Only MG can approve receipts" });
         }
 
+        const { remark } = req.body;
+
         const query = `
             UPDATE receipts 
-            SET status = 'approved', approved_by = ?, approved_at = NOW()
+            SET status = 'approved', approved_by = ?, approved_at = NOW(), mg_remark = ?
             WHERE id = ? AND status = 'pending'
         `;
 
-        const [result] = await con.query(query, [req.user.user_id, req.params.id]);
+        const [result] = await con.query(query, [req.user.user_id, remark || '', req.params.id]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Receipt not found or already processed" });
@@ -210,13 +212,15 @@ router.post('/receipts/:id/reject', verifyToken, async (req, res) => {
             return res.status(403).json({ message: "Only MG can reject receipts" });
         }
 
+        const { remark } = req.body;
+
         const query = `
             UPDATE receipts 
-            SET status = 'rejected', approved_by = ?, approved_at = NOW()
+            SET status = 'rejected', approved_by = ?, approved_at = NOW(), mg_remark = ?
             WHERE id = ? AND status = 'pending'
         `;
 
-        const [result] = await con.query(query, [req.user.user_id, req.params.id]);
+        const [result] = await con.query(query, [req.user.user_id, remark || '', req.params.id]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Receipt not found or already processed" });
@@ -225,6 +229,34 @@ router.post('/receipts/:id/reject', verifyToken, async (req, res) => {
         res.status(200).json({ message: "Receipt rejected successfully" });
     } catch (error) {
         console.error('Error rejecting receipt:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// Resubmit receipt (MG only) - Send back for re-edit
+router.post('/receipts/:id/resubmit', verifyToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'MG') {
+            return res.status(403).json({ message: "Only MG can send receipts for re-edit" });
+        }
+
+        const { remark } = req.body;
+
+        const query = `
+            UPDATE receipts 
+            SET status = 'resubmit', approved_by = ?, approved_at = NOW(), mg_remark = ?
+            WHERE id = ? AND status = 'pending'
+        `;
+
+        const [result] = await con.query(query, [req.user.user_id, remark || '', req.params.id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Receipt not found or already processed" });
+        }
+
+        res.status(200).json({ message: "Receipt sent for re-edit successfully" });
+    } catch (error) {
+        console.error('Error sending receipt for re-edit:', error);
         res.status(500).json({ message: "Internal server error" });
     }
 });

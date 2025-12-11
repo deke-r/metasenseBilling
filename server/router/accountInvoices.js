@@ -207,13 +207,15 @@ router.post('/account-invoices/:id/approve', verifyToken, async (req, res) => {
             return res.status(403).json({ message: "Only MG can approve account invoices" });
         }
 
+        const { remark } = req.body;
+
         const query = `
             UPDATE account_invoices 
-            SET status = 'approved', approved_by = ?, approved_at = NOW()
+            SET status = 'approved', approved_by = ?, approved_at = NOW(), mg_remark = ?
             WHERE id = ? AND status = 'pending'
         `;
 
-        const [result] = await con.query(query, [req.user.user_id, req.params.id]);
+        const [result] = await con.query(query, [req.user.user_id, remark || '', req.params.id]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Account invoice not found or already processed" });
@@ -233,13 +235,15 @@ router.post('/account-invoices/:id/reject', verifyToken, async (req, res) => {
             return res.status(403).json({ message: "Only MG can reject account invoices" });
         }
 
+        const { remark } = req.body;
+
         const query = `
             UPDATE account_invoices 
-            SET status = 'rejected', approved_by = ?, approved_at = NOW()
+            SET status = 'rejected', approved_by = ?, approved_at = NOW(), mg_remark = ?
             WHERE id = ? AND status = 'pending'
         `;
 
-        const [result] = await con.query(query, [req.user.user_id, req.params.id]);
+        const [result] = await con.query(query, [req.user.user_id, remark || '', req.params.id]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ message: "Account invoice not found or already processed" });
@@ -248,6 +252,34 @@ router.post('/account-invoices/:id/reject', verifyToken, async (req, res) => {
         res.status(200).json({ message: "Account invoice rejected successfully" });
     } catch (error) {
         console.error('Error rejecting account invoice:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// Resubmit account invoice (MG only) - Send back for re-edit
+router.post('/account-invoices/:id/resubmit', verifyToken, async (req, res) => {
+    try {
+        if (req.user.role !== 'MG') {
+            return res.status(403).json({ message: "Only MG can send account invoices for re-edit" });
+        }
+
+        const { remark } = req.body;
+
+        const query = `
+            UPDATE account_invoices 
+            SET status = 'resubmit', approved_by = ?, approved_at = NOW(), mg_remark = ?
+            WHERE id = ? AND status = 'pending'
+        `;
+
+        const [result] = await con.query(query, [req.user.user_id, remark || '', req.params.id]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Account invoice not found or already processed" });
+        }
+
+        res.status(200).json({ message: "Account invoice sent for re-edit successfully" });
+    } catch (error) {
+        console.error('Error sending account invoice for re-edit:', error);
         res.status(500).json({ message: "Internal server error" });
     }
 });
