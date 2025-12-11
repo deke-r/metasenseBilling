@@ -448,6 +448,23 @@ router.get('/invoice/search-by-number', verifyToken, async (req, res) => {
     }
 });
 
+// Get all invoice numbers for dropdown (for account invoice form)
+router.get('/invoice/numbers', verifyToken, async (req, res) => {
+    try {
+        const query = `
+            SELECT invoice_no, client_name, total_amount
+            FROM invoices
+            ORDER BY created_at DESC
+        `;
+
+        const [rows] = await con.query(query);
+        res.status(200).json(rows);
+    } catch (error) {
+        console.error('Error fetching invoice numbers:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
 // Get single invoice by ID
 router.get('/invoice/:id', verifyToken, async (req, res) => {
     try {
