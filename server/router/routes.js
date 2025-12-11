@@ -20,6 +20,105 @@ const verifyToken = (req, res, next) => {
     }
 };
 
+// Get dashboard statistics
+router.get('/dashboard/stats', verifyToken, async (req, res) => {
+    try {
+        // Get total invoices count
+        const [countResult] = await con.query('SELECT COUNT(*) as total FROM invoices');
+        const totalInvoices = countResult[0].total;
+
+        // Get total revenue (sum of all invoice amounts)
+        const [revenueResult] = await con.query('SELECT COALESCE(SUM(total_amount), 0) as total_revenue FROM invoices');
+        const totalRevenue = parseFloat(revenueResult[0].total_revenue);
+
+        // Get active clients count (unique client names from invoices)
+        const [clientsResult] = await con.query(`
+            SELECT COUNT(DISTINCT client_name) as active_clients 
+            FROM invoices 
+            WHERE client_name IS NOT NULL AND client_name != ''
+        `);
+        const activeClients = clientsResult[0].active_clients;
+
+        // Get revenue from last month for comparison
+        const [lastMonthResult] = await con.query(`
+            SELECT COALESCE(SUM(total_amount), 0) as last_month_revenue 
+            FROM invoices 
+            WHERE invoice_date >= DATE_SUB(CURDATE(), INTERVAL 2 MONTH) 
+            AND invoice_date < DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+        `);
+        const lastMonthRevenue = parseFloat(lastMonthResult[0].last_month_revenue);
+
+        // Get revenue from current month
+        const [currentMonthResult] = await con.query(`
+            SELECT COALESCE(SUM(total_amount), 0) as current_month_revenue 
+            FROM invoices 
+            WHERE invoice_date >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+        `);
+        const currentMonthRevenue = parseFloat(currentMonthResult[0].current_month_revenue);
+
+        // Calculate revenue change percentage
+        let revenueChangePercent = 0;
+        let revenueChangePositive = true;
+        if (lastMonthRevenue > 0) {
+            revenueChangePercent = ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100).toFixed(1);
+            revenueChangePositive = revenueChangePercent >= 0;
+        } else if (currentMonthRevenue > 0) {
+            revenueChangePercent = 100;
+            revenueChangePositive = true;
+        }
+
+        // Get new clients this month
+        const [newClientsResult] = await con.query(`
+            SELECT COUNT(DISTINCT client_name) as new_clients 
+            FROM invoices 
+            WHERE invoice_date >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)
+            AND client_name IS NOT NULL AND client_name != ''
+        `);
+        const newClientsThisMonth = newClientsResult[0].new_clients;
+
+        // Get pending payments count
+        const [pendingPaymentsResult] = await con.query(`
+            SELECT COUNT(*) as pending_payments 
+            FROM payments 
+            WHERE status = 'pending'
+        `);
+        const pendingPayments = pendingPaymentsResult[0].pending_payments;
+
+        // Get pending receipts count
+        const [pendingReceiptsResult] = await con.query(`
+            SELECT COUNT(*) as pending_receipts 
+            FROM receipts 
+            WHERE status = 'pending'
+        `);
+        const pendingReceipts = pendingReceiptsResult[0].pending_receipts;
+
+        // Get pending account invoices count
+        const [pendingAccountInvoicesResult] = await con.query(`
+            SELECT COUNT(*) as pending_account_invoices 
+            FROM account_invoices 
+            WHERE status = 'pending'
+        `);
+        const pendingAccountInvoices = pendingAccountInvoicesResult[0].pending_account_invoices;
+
+        res.status(200).json({
+            totalInvoices,
+            totalRevenue,
+            activeClients,
+            revenueChange: {
+                percent: Math.abs(revenueChangePercent),
+                positive: revenueChangePositive
+            },
+            newClientsThisMonth,
+            pendingPayments,
+            pendingReceipts,
+            pendingAccountInvoices
+        });
+    } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
 // Get next invoice number
 router.get('/invoice/next-number', verifyToken, async (req, res) => {
     try {
@@ -316,6 +415,35 @@ router.get('/invoice/all', verifyToken, async (req, res) => {
         res.status(200).json(rows);
     } catch (error) {
         console.error('Error fetching invoices:', error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+// Search invoice by invoice number (for autocomplete in account invoice form)
+router.get('/invoice/search-by-number', verifyToken, async (req, res) => {
+    try {
+        const { invoice_no } = req.query;
+
+        if (!invoice_no || invoice_no.trim() === '') {
+            return res.status(200).json(null);
+        }
+
+        const query = `
+            SELECT invoice_no, client_name, total_amount
+            FROM invoices
+            WHERE invoice_no = ?
+            LIMIT 1
+        `;
+
+        const [rows] = await con.query(query, [invoice_no.trim()]);
+
+        if (rows.length > 0) {
+            res.status(200).json(rows[0]);
+        } else {
+            res.status(200).json(null);
+        }
+    } catch (error) {
+        console.error('Error searching invoice:', error);
         res.status(500).json({ message: "Internal server error" });
     }
 });

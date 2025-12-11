@@ -6,12 +6,12 @@ import styles from '../styles/dashboard.module.css'
 import {
     FileText,
     DollarSign,
-    Users,
     PlusCircle,
     Lock,
     Settings,
     FileBarChart,
-    CreditCard
+    CreditCard,
+    Receipt
 } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
@@ -21,6 +21,16 @@ const Dashboard = () => {
     const [recentInvoices, setRecentInvoices] = useState([])
     const [totalInvoices, setTotalInvoices] = useState(0)
     const [loading, setLoading] = useState(true)
+    const [dashboardStats, setDashboardStats] = useState({
+        totalInvoices: 0,
+        totalRevenue: 0,
+        activeClients: 0,
+        revenueChange: { percent: 0, positive: true },
+        newClientsThisMonth: 0,
+        pendingPayments: 0,
+        pendingReceipts: 0,
+        pendingAccountInvoices: 0
+    })
 
     useEffect(() => {
         fetchDashboardData()
@@ -29,7 +39,20 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
         try {
             const token = localStorage.getItem('token')
-            const response = await axios.get(
+
+            // Fetch dashboard statistics
+            const statsResponse = await axios.get(
+                `${import.meta.env.VITE_BASE_URL}/dashboard/stats`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }
+            )
+            setDashboardStats(statsResponse.data)
+
+            // Fetch all invoices for recent activity
+            const invoicesResponse = await axios.get(
                 `${import.meta.env.VITE_BASE_URL}/invoice/all`,
                 {
                     headers: {
@@ -38,7 +61,7 @@ const Dashboard = () => {
                 }
             )
 
-            const allInvoices = response.data
+            const allInvoices = invoicesResponse.data
             setTotalInvoices(allInvoices.length)
             // Get first 5 invoices (API returns sorted by date DESC)
             setRecentInvoices(allInvoices.slice(0, 5))
@@ -50,38 +73,38 @@ const Dashboard = () => {
         }
     }
 
-    // Mock stats data - replace with actual API calls where possible
+    // Stats data using real data from API
     const stats = [
         {
             label: 'Total Invoices',
-            value: totalInvoices.toString(),
+            value: dashboardStats.totalInvoices.toString(),
             change: 'All time',
             positive: true,
             icon: <FileText />,
             color: 'black'
         },
         {
-            label: 'Total Revenue',
-            value: '₹4,52,890',
-            change: '+18% from last month',
-            positive: true,
-            icon: <DollarSign />,
+            label: 'Pending Payments',
+            value: dashboardStats.pendingPayments.toString(),
+            change: 'Awaiting approval',
+            positive: dashboardStats.pendingPayments === 0,
+            icon: <CreditCard />,
             color: 'lightGray'
         },
         {
-            label: 'Pending Payments',
-            value: '₹89,450',
-            change: '-5% from last month',
-            positive: false,
-            icon: <CreditCard />,
+            label: 'Pending Receipts',
+            value: dashboardStats.pendingReceipts.toString(),
+            change: 'Awaiting approval',
+            positive: dashboardStats.pendingReceipts === 0,
+            icon: <Receipt />,
             color: 'mediumGray'
         },
         {
-            label: 'Active Clients',
-            value: '42',
-            change: '+3 new this month',
-            positive: true,
-            icon: <Users />,
+            label: 'Pending Invoices',
+            value: dashboardStats.pendingAccountInvoices.toString(),
+            change: 'Awaiting approval',
+            positive: dashboardStats.pendingAccountInvoices === 0,
+            icon: <FileBarChart />,
             color: 'darkGray'
         }
     ]

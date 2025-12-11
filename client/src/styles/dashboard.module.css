@@ -109,6 +109,11 @@
     color: #1f2937;
 }
 
+.statIcon.black {
+    background: #1f2937;
+    color: #ffffff;
+}
+
 .statLabel {
     color: #9ca3af;
     font-size: 0.8rem;

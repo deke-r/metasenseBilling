@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Upload } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -28,28 +28,6 @@ const PaymentForm = () => {
         utr_imps_no: '',
         remarks: ''
     })
-
-    useEffect(() => {
-        const fetchNextPaymentNo = async () => {
-            try {
-                const token = localStorage.getItem('token')
-                const response = await axios.get(
-                    `${import.meta.env.VITE_BASE_URL}/payments/next-number`,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    }
-                )
-                setPaymentData(prev => ({ ...prev, payment_no: response.data.payment_no }))
-            } catch (error) {
-                console.error('Error fetching payment number:', error)
-                toast.error('Failed to fetch payment number')
-            }
-        }
-
-        fetchNextPaymentNo()
-    }, [])
 
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0]
@@ -126,8 +104,9 @@ const PaymentForm = () => {
                                         type="text"
                                         className={styles.formInput}
                                         value={paymentData.payment_no}
-                                        readOnly
-                                        style={{ background: '#f9fafb', cursor: 'not-allowed' }}
+                                        onChange={(e) => setPaymentData({ ...paymentData, payment_no: e.target.value })}
+                                        placeholder="Enter payment number"
+                                        required
                                     />
                                 </div>
                                 <div className="col-md-4">
