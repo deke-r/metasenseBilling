@@ -139,18 +139,22 @@ router.put('/receipts/:id', verifyToken, async (req, res) => {
             return res.status(404).json({ message: "Receipt not found" });
         }
 
-        if (existing[0].status !== 'pending') {
+        // Allow editing only if status is pending or resubmit
+        if (existing[0].status !== 'pending' && existing[0].status !== 'resubmit') {
             return res.status(403).json({ message: "Cannot edit approved/rejected receipt" });
         }
 
         const receiptData = req.body;
+
+        // If status was resubmit, change it back to pending
+        const newStatus = existing[0].status === 'resubmit' ? 'pending' : existing[0].status;
 
         const query = `
             UPDATE receipts SET
                 date = ?, party_name = ?, amount = ?, po_wo_no = ?,
                 receipt_center = ?, accounting_entry_type = ?, debit_to = ?,
                 credit_to = ?, ledger_balance = ?, document_no = ?,
-                utr_imps_no = ?, remarks = ?
+                utr_imps_no = ?, remarks = ?, status = ?
             WHERE id = ?
         `;
 
@@ -167,6 +171,7 @@ router.put('/receipts/:id', verifyToken, async (req, res) => {
             receiptData.document_no,
             receiptData.utr_imps_no,
             receiptData.remarks,
+            newStatus,
             req.params.id
         ]);
 

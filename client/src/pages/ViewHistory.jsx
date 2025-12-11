@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Eye, FileText } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import styles from '../styles/approvals.module.css'
 import axios from 'axios'
@@ -16,6 +16,9 @@ const ViewHistory = () => {
     const [receipts, setReceipts] = useState([])
     const [accountInvoices, setAccountInvoices] = useState([])
     const [loading, setLoading] = useState(false)
+    const [selectedItem, setSelectedItem] = useState(null)
+    const [selectedType, setSelectedType] = useState('')
+    const [showOffcanvas, setShowOffcanvas] = useState(false)
 
     useEffect(() => {
         if (fromDate && toDate) {
@@ -52,6 +55,21 @@ const ViewHistory = () => {
         }
     }
 
+    const handleView = (item, type) => {
+        setSelectedItem(item)
+        setSelectedType(type)
+        setShowOffcanvas(true)
+    }
+
+    const viewPDF = () => {
+        if (selectedItem) {
+            const pdfFile = selectedItem.file_pdf || selectedItem.invoice_pdf_file
+            if (pdfFile) {
+                window.open(`${import.meta.env.VITE_PDF_URL}/${pdfFile}`, '_blank')
+            }
+        }
+    }
+
     const renderPayments = () => (
         <div className={styles.tableContainer}>
             <table className={styles.table}>
@@ -66,11 +84,12 @@ const ViewHistory = () => {
                         <th>Status</th>
                         <th>Approved/Rejected By</th>
                         <th>Approved/Rejected At</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {payments.length === 0 ? (
-                        <tr><td colSpan="9" className={styles.emptyState}>No {statusFilter} payments found</td></tr>
+                        <tr><td colSpan="10" className={styles.emptyState}>No {statusFilter} payments found</td></tr>
                     ) : (
                         payments.map(payment => (
                             <tr key={payment.id}>
@@ -87,6 +106,15 @@ const ViewHistory = () => {
                                 </td>
                                 <td>{payment.approved_by_name || '-'}</td>
                                 <td>{payment.approved_at ? new Date(payment.approved_at).toLocaleString('en-IN') : '-'}</td>
+                                <td>
+                                    <button
+                                        onClick={() => handleView(payment, 'payment')}
+                                        className={styles.btnView}
+                                        title="View Details"
+                                    >
+                                        <Eye size={18} />
+                                    </button>
+                                </td>
                             </tr>
                         ))
                     )}
@@ -109,11 +137,12 @@ const ViewHistory = () => {
                         <th>Status</th>
                         <th>Approved/Rejected By</th>
                         <th>Approved/Rejected At</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {receipts.length === 0 ? (
-                        <tr><td colSpan="9" className={styles.emptyState}>No {statusFilter} receipts found</td></tr>
+                        <tr><td colSpan="10" className={styles.emptyState}>No {statusFilter} receipts found</td></tr>
                     ) : (
                         receipts.map(receipt => (
                             <tr key={receipt.id}>
@@ -130,6 +159,15 @@ const ViewHistory = () => {
                                 </td>
                                 <td>{receipt.approved_by_name || '-'}</td>
                                 <td>{receipt.approved_at ? new Date(receipt.approved_at).toLocaleString('en-IN') : '-'}</td>
+                                <td>
+                                    <button
+                                        onClick={() => handleView(receipt, 'receipt')}
+                                        className={styles.btnView}
+                                        title="View Details"
+                                    >
+                                        <Eye size={18} />
+                                    </button>
+                                </td>
                             </tr>
                         ))
                     )}
@@ -152,11 +190,12 @@ const ViewHistory = () => {
                         <th>Status</th>
                         <th>Approved/Rejected By</th>
                         <th>Approved/Rejected At</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {accountInvoices.length === 0 ? (
-                        <tr><td colSpan="9" className={styles.emptyState}>No {statusFilter} account invoices found</td></tr>
+                        <tr><td colSpan="10" className={styles.emptyState}>No {statusFilter} account invoices found</td></tr>
                     ) : (
                         accountInvoices.map(invoice => (
                             <tr key={invoice.id}>
@@ -173,6 +212,15 @@ const ViewHistory = () => {
                                 </td>
                                 <td>{invoice.approved_by_name || '-'}</td>
                                 <td>{invoice.approved_at ? new Date(invoice.approved_at).toLocaleString('en-IN') : '-'}</td>
+                                <td>
+                                    <button
+                                        onClick={() => handleView(invoice, 'accountInvoice')}
+                                        className={styles.btnView}
+                                        title="View Details"
+                                    >
+                                        <Eye size={18} />
+                                    </button>
+                                </td>
                             </tr>
                         ))
                     )}
@@ -287,6 +335,254 @@ const ViewHistory = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Bootstrap Offcanvas - View Details */}
+            <div
+                className={`offcanvas offcanvas-end ${styles.offcanvasCustom} ${showOffcanvas ? 'show' : ''}`}
+                tabIndex="-1"
+                style={{ visibility: showOffcanvas ? 'visible' : 'hidden' }}
+            >
+                <div className={`offcanvas-header ${styles.offcanvasHeader}`}>
+                    <h5 className={`offcanvas-title ${styles.offcanvasTitle}`}>
+                        {selectedType === 'payment' ? 'Payment' :
+                            selectedType === 'receipt' ? 'Receipt' : 'Account Invoice'} Details
+                    </h5>
+                    <button type="button" className="btn-close" onClick={() => setShowOffcanvas(false)}></button>
+                </div>
+                <div className={`offcanvas-body ${styles.offcanvasBody}`}>
+                    {selectedItem && (
+                        <>
+                            {/* Details Section */}
+                            <div className={styles.detailSection}>
+                                <div className={styles.detailsGrid}>
+                                    {/* Payment Details */}
+                                    {selectedType === 'payment' && (
+                                        <>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Payment No:</span>
+                                                <span className={styles.detailValue}>{selectedItem.payment_no}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Date:</span>
+                                                <span className={styles.detailValue}>{new Date(selectedItem.date).toLocaleDateString('en-IN')}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Party Name:</span>
+                                                <span className={styles.detailValue}>{selectedItem.party_name}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Amount:</span>
+                                                <span className={styles.detailValue}>₹{parseFloat(selectedItem.amount).toLocaleString('en-IN')}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Transaction Type:</span>
+                                                <span className={styles.detailValue}>{selectedItem.transaction_type || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Requested By:</span>
+                                                <span className={styles.detailValue}>{selectedItem.requested_by || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Payment Category:</span>
+                                                <span className={styles.detailValue}>{selectedItem.payment_category || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Payment Center:</span>
+                                                <span className={styles.detailValue}>{selectedItem.payment_center || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Accounting Entry Type:</span>
+                                                <span className={styles.detailValue}>{selectedItem.accounting_entry_type || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Debit To:</span>
+                                                <span className={styles.detailValue}>{selectedItem.debit_to || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Credit To:</span>
+                                                <span className={styles.detailValue}>{selectedItem.credit_to || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Ledger Balance:</span>
+                                                <span className={styles.detailValue}>{selectedItem.ledger_balance || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Total Budget:</span>
+                                                <span className={styles.detailValue}>{selectedItem.total_budget || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Available Budget:</span>
+                                                <span className={styles.detailValue}>{selectedItem.available_budget || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Document No:</span>
+                                                <span className={styles.detailValue}>{selectedItem.document_no || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>UTR/IMPS No:</span>
+                                                <span className={styles.detailValue}>{selectedItem.utr_imps_no || '-'}</span>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {/* Receipt Details */}
+                                    {selectedType === 'receipt' && (
+                                        <>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Receipt No:</span>
+                                                <span className={styles.detailValue}>{selectedItem.receipt_no}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Date:</span>
+                                                <span className={styles.detailValue}>{new Date(selectedItem.date).toLocaleDateString('en-IN')}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Party Name:</span>
+                                                <span className={styles.detailValue}>{selectedItem.party_name}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Amount:</span>
+                                                <span className={styles.detailValue}>₹{parseFloat(selectedItem.amount).toLocaleString('en-IN')}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>PO/WO No:</span>
+                                                <span className={styles.detailValue}>{selectedItem.po_wo_no || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Receipt Center:</span>
+                                                <span className={styles.detailValue}>{selectedItem.receipt_center || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Accounting Entry Type:</span>
+                                                <span className={styles.detailValue}>{selectedItem.accounting_entry_type || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Debit To:</span>
+                                                <span className={styles.detailValue}>{selectedItem.debit_to || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Credit To:</span>
+                                                <span className={styles.detailValue}>{selectedItem.credit_to || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Ledger Balance:</span>
+                                                <span className={styles.detailValue}>{selectedItem.ledger_balance || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Document No:</span>
+                                                <span className={styles.detailValue}>{selectedItem.document_no || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>UTR/IMPS No:</span>
+                                                <span className={styles.detailValue}>{selectedItem.utr_imps_no || '-'}</span>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {/* Account Invoice Details */}
+                                    {selectedType === 'accountInvoice' && (
+                                        <>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Invoice No:</span>
+                                                <span className={styles.detailValue}>{selectedItem.invoice_no}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Date:</span>
+                                                <span className={styles.detailValue}>{new Date(selectedItem.date).toLocaleDateString('en-IN')}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Party Name:</span>
+                                                <span className={styles.detailValue}>{selectedItem.party_name}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Amount:</span>
+                                                <span className={styles.detailValue}>₹{parseFloat(selectedItem.amount).toLocaleString('en-IN')}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>PO/WO No:</span>
+                                                <span className={styles.detailValue}>{selectedItem.po_wo_no || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Accounting Entry Type:</span>
+                                                <span className={styles.detailValue}>{selectedItem.accounting_entry_type || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Debit To:</span>
+                                                <span className={styles.detailValue}>{selectedItem.debit_to || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Credit To:</span>
+                                                <span className={styles.detailValue}>{selectedItem.credit_to || '-'}</span>
+                                            </div>
+                                            <div className={styles.detailItem}>
+                                                <span className={styles.detailLabel}>Ledger Balance:</span>
+                                                <span className={styles.detailValue}>{selectedItem.ledger_balance || '-'}</span>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {/* Common Fields */}
+                                    <div className={styles.detailItem}>
+                                        <span className={styles.detailLabel}>Remarks:</span>
+                                        <span className={styles.detailValue}>{selectedItem.remarks || '-'}</span>
+                                    </div>
+                                    <div className={styles.detailItem}>
+                                        <span className={styles.detailLabel}>Created By:</span>
+                                        <span className={styles.detailValue}>{selectedItem.created_by_name}</span>
+                                    </div>
+                                    <div className={styles.detailItem}>
+                                        <span className={styles.detailLabel}>Status:</span>
+                                        <span className={`${styles.badge} ${selectedItem.status === 'approved' ? styles.badgeApproved :
+                                            selectedItem.status === 'rejected' ? styles.badgeRejected :
+                                                styles.badgeResubmit
+                                            }`}>
+                                            {selectedItem.status}
+                                        </span>
+                                    </div>
+                                    <div className={styles.detailItem}>
+                                        <span className={styles.detailLabel}>Approved/Rejected By:</span>
+                                        <span className={styles.detailValue}>{selectedItem.approved_by_name || '-'}</span>
+                                    </div>
+                                    <div className={styles.detailItem}>
+                                        <span className={styles.detailLabel}>Approved/Rejected At:</span>
+                                        <span className={styles.detailValue}>{selectedItem.approved_at ? new Date(selectedItem.approved_at).toLocaleString('en-IN') : '-'}</span>
+                                    </div>
+
+                                    {/* Manager's Remark */}
+                                    {selectedItem.mg_remark && (
+                                        <div className={styles.detailItemFull}>
+                                            <span className={styles.detailLabel}>Manager's Remark:</span>
+                                            <span className={styles.detailValue}>{selectedItem.mg_remark}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* PDF Button */}
+                            {(selectedItem.file_pdf || selectedItem.invoice_pdf_file) && (
+                                <div className={styles.detailSection}>
+                                    <button
+                                        className={styles.pdfButton}
+                                        onClick={viewPDF}
+                                    >
+                                        <FileText size={18} />
+                                        View PDF Document
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            </div>
+
+            {/* Backdrop */}
+            {showOffcanvas && (
+                <div
+                    className="offcanvas-backdrop fade show"
+                    onClick={() => setShowOffcanvas(false)}
+                    style={{ zIndex: 1040 }}
+                ></div>
+            )}
         </div>
     )
 }

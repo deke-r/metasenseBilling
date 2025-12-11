@@ -75,6 +75,28 @@
     box-shadow: 0 0 0 3px rgba(12, 67, 121, 0.1);
 }
 
+.formInput:disabled {
+    background: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+
+.required {
+    color: #dc2626;
+    margin-left: 0.25rem;
+}
+
+.inputError {
+    border-color: #dc2626;
+}
+
+.errorMessage {
+    display: block;
+    color: #dc2626;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
 .itemRow {
     margin-bottom: 1rem;
     padding-bottom: 1rem;
@@ -563,4 +585,79 @@
 
 .semiBold {
     font-weight: 600;
+}
+
+/* Edit Form Styles */
+.viewPdfButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: #0C4379;
+    color: #ffffff;
+    border: none;
+    border-radius: 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.viewPdfButton:hover {
+    background: #083056;
+}
+
+.fileUpload {
+    position: relative;
+}
+
+.fileInput {
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.fileLabel {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: #f3f4f6;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+    border-radius: 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.fileLabel:hover {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+.submitButton {
+    width: 100%;
+    padding: 0.875rem 2rem;
+    background: #0C4379;
+    color: #ffffff;
+    border: none;
+    border-radius: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 1rem;
+}
+
+.submitButton:hover {
+    background: #083056;
+}
+
+.contentSection {
+    padding: 2rem 0;
 }

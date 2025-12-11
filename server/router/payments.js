@@ -163,7 +163,7 @@ router.put('/payments/:id', verifyToken, upload.single('file'), async (req, res)
             return res.status(403).json({ message: "Only AM can update payments" });
         }
 
-        // Check if payment exists and is pending
+        // Check if payment exists and is pending or resubmit
         const [existing] = await con.query(
             'SELECT * FROM payments WHERE id = ? AND created_by = ?',
             [req.params.id, req.user.user_id]
@@ -173,12 +173,16 @@ router.put('/payments/:id', verifyToken, upload.single('file'), async (req, res)
             return res.status(404).json({ message: "Payment not found" });
         }
 
-        if (existing[0].status !== 'pending') {
+        // Allow editing only if status is pending or resubmit
+        if (existing[0].status !== 'pending' && existing[0].status !== 'resubmit') {
             return res.status(403).json({ message: "Cannot edit approved/rejected payment" });
         }
 
         const paymentData = JSON.parse(req.body.data);
         const filePath = req.file ? `/uploads/payments/${req.file.filename}` : existing[0].file_pdf;
+
+        // If status was resubmit, change it back to pending
+        const newStatus = existing[0].status === 'resubmit' ? 'pending' : existing[0].status;
 
         const query = `
             UPDATE payments SET
@@ -186,7 +190,7 @@ router.put('/payments/:id', verifyToken, upload.single('file'), async (req, res)
                 requested_by = ?, payment_category = ?, payment_center = ?,
                 accounting_entry_type = ?, debit_to = ?, credit_to = ?,
                 ledger_balance = ?, total_budget = ?, available_budget = ?,
-                document_no = ?, utr_imps_no = ?, file_pdf = ?, remarks = ?
+                document_no = ?, utr_imps_no = ?, file_pdf = ?, remarks = ?, status = ?
             WHERE id = ?
         `;
 
@@ -208,6 +212,7 @@ router.put('/payments/:id', verifyToken, upload.single('file'), async (req, res)
             paymentData.utr_imps_no,
             filePath,
             paymentData.remarks,
+            newStatus,
             req.params.id
         ]);
 

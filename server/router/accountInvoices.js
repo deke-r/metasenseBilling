@@ -164,18 +164,22 @@ router.put('/account-invoices/:id', verifyToken, upload.single('file'), async (r
             return res.status(404).json({ message: "Account invoice not found" });
         }
 
-        if (existing[0].status !== 'pending') {
+        // Allow editing only if status is pending or resubmit
+        if (existing[0].status !== 'pending' && existing[0].status !== 'resubmit') {
             return res.status(403).json({ message: "Cannot edit approved/rejected invoice" });
         }
 
         const invoiceData = JSON.parse(req.body.data);
         const filePath = req.file ? `/uploads/account-invoices/${req.file.filename}` : existing[0].invoice_pdf_file;
 
+        // If status was resubmit, change it back to pending
+        const newStatus = existing[0].status === 'resubmit' ? 'pending' : existing[0].status;
+
         const query = `
             UPDATE account_invoices SET
                 date = ?, party_name = ?, amount = ?, po_wo_no = ?,
                 accounting_entry_type = ?, debit_to = ?, credit_to = ?,
-                ledger_balance = ?, invoice_pdf_file = ?, remarks = ?
+                ledger_balance = ?, invoice_pdf_file = ?, remarks = ?, status = ?
             WHERE id = ?
         `;
 
@@ -190,6 +194,7 @@ router.put('/account-invoices/:id', verifyToken, upload.single('file'), async (r
             invoiceData.ledger_balance,
             filePath,
             invoiceData.remarks,
+            newStatus,
             req.params.id
         ]);
 

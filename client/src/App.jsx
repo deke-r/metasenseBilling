@@ -11,6 +11,9 @@ import ChangePassword from "./pages/ChangePassword";
 import PaymentForm from "./pages/PaymentForm";
 import ReceiptForm from "./pages/ReceiptForm";
 import AccountInvoiceForm from "./pages/AccountInvoiceForm";
+import EditPaymentForm from "./pages/EditPaymentForm";
+import EditReceiptForm from "./pages/EditReceiptForm";
+import EditAccountInvoiceForm from "./pages/EditAccountInvoiceForm";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const App = () => {
@@ -104,6 +107,30 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <AMViewHistory />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payment/edit/:id"
+            element={
+              <ProtectedRoute>
+                <EditPaymentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/receipt/edit/:id"
+            element={
+              <ProtectedRoute>
+                <EditReceiptForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/account-invoice/edit/:id"
+            element={
+              <ProtectedRoute>
+                <EditAccountInvoiceForm />
               </ProtectedRoute>
             }
           />
