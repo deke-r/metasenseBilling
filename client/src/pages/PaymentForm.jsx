@@ -73,7 +73,8 @@ const PaymentForm = () => {
             }, 2000)
         } catch (error) {
             console.error('Error submitting payment:', error)
-            toast.error('Failed to submit payment')
+            const errorMessage = error.response?.data?.message || 'Failed to submit payment'
+            toast.error(errorMessage)
         }
     }
 

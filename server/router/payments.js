@@ -4,6 +4,7 @@ const con = require('../db/config');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { sendEmail, getNotificationTemplate, getManagerEmails, getUserEmail } = require('../utils/emailService');
 
 // Middleware to verify JWT token
 const verifyToken = (req, res, next) => {
@@ -150,8 +151,24 @@ router.post('/payments', verifyToken, upload.single('file'), async (req, res) =>
             message: "Payment created successfully",
             id: result.insertId
         });
+
+        // Notify Managers
+        const managerEmails = await getManagerEmails();
+        const emailSubject = `New Payment Request: ${paymentData.payment_no}`;
+        const emailBody = `
+            A new payment request <strong>${paymentData.payment_no}</strong> for <strong>${paymentData.party_name}</strong> (Amount: ₹${paymentData.amount}) has been submitted by ${req.user.name}.
+            <br><br>
+            Please login to the dashboard to review and approve/reject this request.
+        `;
+        const emailHtml = getNotificationTemplate('New Payment Request', emailBody);
+        sendEmail(managerEmails, emailSubject, emailHtml);
     } catch (error) {
         console.error('Error creating payment:', error);
+        if (error && error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({
+                message: "This Payment Number already exists. Please use a unique Payment Number."
+            });
+        }
         res.status(500).json({ message: "Internal server error" });
     }
 });
@@ -217,8 +234,26 @@ router.put('/payments/:id', verifyToken, upload.single('file'), async (req, res)
         ]);
 
         res.status(200).json({ message: "Payment updated successfully" });
+
+        // Notify Managers if it was a re-submission (status changed from resubmit to pending)
+        if (existing[0].status === 'resubmit' && newStatus === 'pending') {
+            const managerEmails = await getManagerEmails();
+            const emailSubject = `Payment Resubmitted: ${paymentData.payment_no}`;
+            const emailBody = `
+                The payment request <strong>${paymentData.payment_no}</strong> for <strong>${paymentData.party_name}</strong> (Amount: ₹${paymentData.amount}) has been updated and resubmitted by ${req.user.name}.
+                <br><br>
+                Please login to the dashboard to review and approve/reject this request.
+            `;
+            const emailHtml = getNotificationTemplate('Payment Request Resubmitted', emailBody);
+            sendEmail(managerEmails, emailSubject, emailHtml);
+        }
     } catch (error) {
         console.error('Error updating payment:', error);
+        if (error && error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({
+                message: "This Payment Number already exists. Please use a unique Payment Number."
+            });
+        }
         res.status(500).json({ message: "Internal server error" });
     }
 });
@@ -245,6 +280,22 @@ router.post('/payments/:id/approve', verifyToken, async (req, res) => {
         }
 
         res.status(200).json({ message: "Payment approved successfully" });
+
+        // Notify Creator
+        const [paymentRows] = await con.query('SELECT created_by, payment_no FROM payments WHERE id = ?', [req.params.id]);
+        if (paymentRows.length > 0) {
+            const creatorEmail = await getUserEmail(paymentRows[0].created_by);
+            if (creatorEmail) {
+                const subject = `Payment Approved: ${paymentRows[0].payment_no}`;
+                const body = `
+                    Your payment request <strong>${paymentRows[0].payment_no}</strong> has been <strong>APPROVED</strong> by ${req.user.name}.
+                    <br><br>
+                    <strong>Remarks:</strong> ${remark || 'None'}
+                `;
+                const html = getNotificationTemplate('Payment Request Approved', body);
+                sendEmail(creatorEmail, subject, html);
+            }
+        }
     } catch (error) {
         console.error('Error approving payment:', error);
         res.status(500).json({ message: "Internal server error" });
@@ -273,6 +324,22 @@ router.post('/payments/:id/reject', verifyToken, async (req, res) => {
         }
 
         res.status(200).json({ message: "Payment rejected successfully" });
+
+        // Notify Creator
+        const [paymentRows] = await con.query('SELECT created_by, payment_no FROM payments WHERE id = ?', [req.params.id]);
+        if (paymentRows.length > 0) {
+            const creatorEmail = await getUserEmail(paymentRows[0].created_by);
+            if (creatorEmail) {
+                const subject = `Payment Rejected: ${paymentRows[0].payment_no}`;
+                const body = `
+                    Your payment request <strong>${paymentRows[0].payment_no}</strong> has been <strong>REJECTED</strong> by ${req.user.name}.
+                    <br><br>
+                    <strong>Reason:</strong> ${remark}
+                `;
+                const html = getNotificationTemplate('Payment Request Rejected', body);
+                sendEmail(creatorEmail, subject, html);
+            }
+        }
     } catch (error) {
         console.error('Error rejecting payment:', error);
         res.status(500).json({ message: "Internal server error" });
@@ -301,6 +368,24 @@ router.post('/payments/:id/resubmit', verifyToken, async (req, res) => {
         }
 
         res.status(200).json({ message: "Payment sent for re-edit successfully" });
+
+        // Notify Creator
+        const [paymentRows] = await con.query('SELECT created_by, payment_no FROM payments WHERE id = ?', [req.params.id]);
+        if (paymentRows.length > 0) {
+            const creatorEmail = await getUserEmail(paymentRows[0].created_by);
+            if (creatorEmail) {
+                const subject = `Action Required: Payment ${paymentRows[0].payment_no}`;
+                const body = `
+                    Your payment request <strong>${paymentRows[0].payment_no}</strong> has been sent back for <strong>RE-EDIT</strong> by ${req.user.name}.
+                    <br><br>
+                    <strong>Comments:</strong> ${remark}
+                    <br><br>
+                    Please update the details and resubmit.
+                `;
+                const html = getNotificationTemplate('Payment Request Returned', body);
+                sendEmail(creatorEmail, subject, html);
+            }
+        }
     } catch (error) {
         console.error('Error sending payment for re-edit:', error);
         res.status(500).json({ message: "Internal server error" });

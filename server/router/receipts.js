@@ -4,6 +4,7 @@ const con = require('../db/config');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { sendEmail, getNotificationTemplate, getManagerEmails, getUserEmail } = require('../utils/emailService');
 
 // Middleware to verify JWT token
 const verifyToken = (req, res, next) => {
@@ -117,6 +118,17 @@ router.post('/receipts', verifyToken, async (req, res) => {
             message: "Receipt created successfully",
             id: result.insertId
         });
+
+        // Notify Managers
+        const managerEmails = await getManagerEmails();
+        const emailSubject = `New Receipt Request: ${receiptData.receipt_no}`;
+        const emailBody = `
+            A new receipt request <strong>${receiptData.receipt_no}</strong> for <strong>${receiptData.party_name}</strong> (Amount: ₹${receiptData.amount}) has been submitted by ${req.user.name}.
+            <br><br>
+            Please login to the dashboard to review and approve/reject this request.
+        `;
+        const emailHtml = getNotificationTemplate('New Receipt Request', emailBody);
+        sendEmail(managerEmails, emailSubject, emailHtml);
     } catch (error) {
         console.error('Error creating receipt:', error);
         res.status(500).json({ message: "Internal server error" });
@@ -204,6 +216,22 @@ router.post('/receipts/:id/approve', verifyToken, async (req, res) => {
         }
 
         res.status(200).json({ message: "Receipt approved successfully" });
+
+        // Notify Creator
+        const [receiptRows] = await con.query('SELECT created_by, receipt_no FROM receipts WHERE id = ?', [req.params.id]);
+        if (receiptRows.length > 0) {
+            const creatorEmail = await getUserEmail(receiptRows[0].created_by);
+            if (creatorEmail) {
+                const subject = `Receipt Approved: ${receiptRows[0].receipt_no}`;
+                const body = `
+                    Your receipt request <strong>${receiptRows[0].receipt_no}</strong> has been <strong>APPROVED</strong> by ${req.user.name}.
+                    <br><br>
+                    <strong>Remarks:</strong> ${remark || 'None'}
+                `;
+                const html = getNotificationTemplate('Receipt Request Approved', body);
+                sendEmail(creatorEmail, subject, html);
+            }
+        }
     } catch (error) {
         console.error('Error approving receipt:', error);
         res.status(500).json({ message: "Internal server error" });
@@ -232,6 +260,22 @@ router.post('/receipts/:id/reject', verifyToken, async (req, res) => {
         }
 
         res.status(200).json({ message: "Receipt rejected successfully" });
+
+        // Notify Creator
+        const [receiptRows] = await con.query('SELECT created_by, receipt_no FROM receipts WHERE id = ?', [req.params.id]);
+        if (receiptRows.length > 0) {
+            const creatorEmail = await getUserEmail(receiptRows[0].created_by);
+            if (creatorEmail) {
+                const subject = `Receipt Rejected: ${receiptRows[0].receipt_no}`;
+                const body = `
+                    Your receipt request <strong>${receiptRows[0].receipt_no}</strong> has been <strong>REJECTED</strong> by ${req.user.name}.
+                    <br><br>
+                    <strong>Reason:</strong> ${remark}
+                `;
+                const html = getNotificationTemplate('Receipt Request Rejected', body);
+                sendEmail(creatorEmail, subject, html);
+            }
+        }
     } catch (error) {
         console.error('Error rejecting receipt:', error);
         res.status(500).json({ message: "Internal server error" });
@@ -260,6 +304,24 @@ router.post('/receipts/:id/resubmit', verifyToken, async (req, res) => {
         }
 
         res.status(200).json({ message: "Receipt sent for re-edit successfully" });
+
+        // Notify Creator
+        const [receiptRows] = await con.query('SELECT created_by, receipt_no FROM receipts WHERE id = ?', [req.params.id]);
+        if (receiptRows.length > 0) {
+            const creatorEmail = await getUserEmail(receiptRows[0].created_by);
+            if (creatorEmail) {
+                const subject = `Action Required: Receipt ${receiptRows[0].receipt_no}`;
+                const body = `
+                    Your receipt request <strong>${receiptRows[0].receipt_no}</strong> has been sent back for <strong>RE-EDIT</strong> by ${req.user.name}.
+                    <br><br>
+                    <strong>Comments:</strong> ${remark}
+                    <br><br>
+                    Please update the details and resubmit.
+                `;
+                const html = getNotificationTemplate('Receipt Request Returned', body);
+                sendEmail(creatorEmail, subject, html);
+            }
+        }
     } catch (error) {
         console.error('Error sending receipt for re-edit:', error);
         res.status(500).json({ message: "Internal server error" });

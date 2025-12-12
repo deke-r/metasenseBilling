@@ -135,7 +135,8 @@ const EditPaymentForm = () => {
             }, 2000)
         } catch (error) {
             console.error('Error updating payment:', error)
-            toast.error('Failed to update payment')
+            const errorMessage = error.response?.data?.message || 'Failed to update payment'
+            toast.error(errorMessage)
         }
     }
 

@@ -4,6 +4,7 @@ const con = require('../db/config');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { sendEmail, getNotificationTemplate, getManagerEmails, getUserEmail } = require('../utils/emailService');
 
 // Middleware to verify JWT token
 const verifyToken = (req, res, next) => {
@@ -142,6 +143,17 @@ router.post('/account-invoices', verifyToken, upload.single('file'), async (req,
             message: "Account invoice created successfully",
             id: result.insertId
         });
+
+        // Notify Managers
+        const managerEmails = await getManagerEmails();
+        const emailSubject = `New Account Invoice Request: ${invoiceData.invoice_no}`;
+        const emailBody = `
+            A new account invoice request <strong>${invoiceData.invoice_no}</strong> for <strong>${invoiceData.party_name}</strong> (Amount: ₹${invoiceData.amount}) has been submitted by ${req.user.name}.
+            <br><br>
+            Please login to the dashboard to review and approve/reject this request.
+        `;
+        const emailHtml = getNotificationTemplate('New Account Invoice Request', emailBody);
+        sendEmail(managerEmails, emailSubject, emailHtml);
     } catch (error) {
         console.error('Error creating account invoice:', error);
         res.status(500).json({ message: "Internal server error" });
@@ -227,6 +239,22 @@ router.post('/account-invoices/:id/approve', verifyToken, async (req, res) => {
         }
 
         res.status(200).json({ message: "Account invoice approved successfully" });
+
+        // Notify Creator
+        const [invoiceRows] = await con.query('SELECT created_by, invoice_no FROM account_invoices WHERE id = ?', [req.params.id]);
+        if (invoiceRows.length > 0) {
+            const creatorEmail = await getUserEmail(invoiceRows[0].created_by);
+            if (creatorEmail) {
+                const subject = `Account Invoice Approved: ${invoiceRows[0].invoice_no}`;
+                const body = `
+                    Your account invoice request <strong>${invoiceRows[0].invoice_no}</strong> has been <strong>APPROVED</strong> by ${req.user.name}.
+                    <br><br>
+                    <strong>Remarks:</strong> ${remark || 'None'}
+                `;
+                const html = getNotificationTemplate('Account Invoice Request Approved', body);
+                sendEmail(creatorEmail, subject, html);
+            }
+        }
     } catch (error) {
         console.error('Error approving account invoice:', error);
         res.status(500).json({ message: "Internal server error" });
@@ -255,6 +283,22 @@ router.post('/account-invoices/:id/reject', verifyToken, async (req, res) => {
         }
 
         res.status(200).json({ message: "Account invoice rejected successfully" });
+
+        // Notify Creator
+        const [invoiceRows] = await con.query('SELECT created_by, invoice_no FROM account_invoices WHERE id = ?', [req.params.id]);
+        if (invoiceRows.length > 0) {
+            const creatorEmail = await getUserEmail(invoiceRows[0].created_by);
+            if (creatorEmail) {
+                const subject = `Account Invoice Rejected: ${invoiceRows[0].invoice_no}`;
+                const body = `
+                    Your account invoice request <strong>${invoiceRows[0].invoice_no}</strong> has been <strong>REJECTED</strong> by ${req.user.name}.
+                    <br><br>
+                    <strong>Reason:</strong> ${remark}
+                `;
+                const html = getNotificationTemplate('Account Invoice Request Rejected', body);
+                sendEmail(creatorEmail, subject, html);
+            }
+        }
     } catch (error) {
         console.error('Error rejecting account invoice:', error);
         res.status(500).json({ message: "Internal server error" });
@@ -283,6 +327,24 @@ router.post('/account-invoices/:id/resubmit', verifyToken, async (req, res) => {
         }
 
         res.status(200).json({ message: "Account invoice sent for re-edit successfully" });
+
+        // Notify Creator
+        const [invoiceRows] = await con.query('SELECT created_by, invoice_no FROM account_invoices WHERE id = ?', [req.params.id]);
+        if (invoiceRows.length > 0) {
+            const creatorEmail = await getUserEmail(invoiceRows[0].created_by);
+            if (creatorEmail) {
+                const subject = `Action Required: Account Invoice ${invoiceRows[0].invoice_no}`;
+                const body = `
+                    Your account invoice request <strong>${invoiceRows[0].invoice_no}</strong> has been sent back for <strong>RE-EDIT</strong> by ${req.user.name}.
+                    <br><br>
+                    <strong>Comments:</strong> ${remark}
+                    <br><br>
+                    Please update the details and resubmit.
+                `;
+                const html = getNotificationTemplate('Account Invoice Request Returned', body);
+                sendEmail(creatorEmail, subject, html);
+            }
+        }
     } catch (error) {
         console.error('Error sending account invoice for re-edit:', error);
         res.status(500).json({ message: "Internal server error" });
