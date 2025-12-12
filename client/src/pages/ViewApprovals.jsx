@@ -248,7 +248,7 @@ const ViewApprovals = () => {
                                         onClick={() => handleViewDetails(payment, 'payments')}
                                         title="View Details"
                                     >
-                                        <Eye size={16} /> 
+                                        <Eye size={16} />
                                     </button>
                                 </td>
                             </tr>
@@ -291,7 +291,7 @@ const ViewApprovals = () => {
                                         onClick={() => handleViewDetails(receipt, 'receipts')}
                                         title="View Details"
                                     >
-                                        <Eye size={16} /> 
+                                        <Eye size={16} />
                                     </button>
                                 </td>
                             </tr>
@@ -334,7 +334,7 @@ const ViewApprovals = () => {
                                         onClick={() => handleViewDetails(invoice, 'account-invoices')}
                                         title="View Details"
                                     >
-                                        <Eye size={16} /> 
+                                        <Eye size={16} />
                                     </button>
                                 </td>
                             </tr>
@@ -364,7 +364,7 @@ const ViewApprovals = () => {
                     <h2 className={styles.pageTitle}>Pending Approvals</h2>
 
                     <div className="mt-4">
-                        <ul className={`nav ${styles.navTabs}`} role="tablist">
+                        <ul className={`nav nav-tabs ${styles.navTabs}`} role="tablist">
                             <li className={`nav-item ${styles.navItem}`} role="presentation">
                                 <button
                                     className={`nav-link ${styles.navLink} ${activeTab === 'payments' ? 'active' : ''}`}

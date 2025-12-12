@@ -517,9 +517,8 @@ const AMViewHistory = () => {
                         </div>
                     </div>
 
-                    {/* Tabs */}
                     <div className="mt-4">
-                        <ul className={`nav ${styles.navTabs}`} role="tablist">
+                        <ul className={`nav nav-tabs ${styles.navTabs}`} role="tablist">
                             <li className={`nav-item ${styles.navItem}`} role="presentation">
                                 <button
                                     className={`nav-link ${styles.navLink} ${activeTab === 'payments' ? 'active' : ''}`}

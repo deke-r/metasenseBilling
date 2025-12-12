@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Upload, FileText } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import styles from '../styles/invoice.module.css'
 import toast, { Toaster } from 'react-hot-toast'
@@ -9,8 +9,6 @@ import axios from 'axios'
 const EditReceiptForm = () => {
     const navigate = useNavigate()
     const { id } = useParams()
-    const [file, setFile] = useState(null)
-    const [existingPDF, setExistingPDF] = useState(null)
     const [loading, setLoading] = useState(true)
     const [mgRemark, setMgRemark] = useState('')
     const [receiptData, setReceiptData] = useState({
@@ -19,6 +17,13 @@ const EditReceiptForm = () => {
         party_name: '',
         amount: '',
         po_wo_no: '',
+        receipt_center: '',
+        accounting_entry_type: '',
+        debit_to: '',
+        credit_to: '',
+        ledger_balance: '',
+        document_no: '',
+        utr_imps_no: '',
         remarks: ''
     })
 
@@ -43,11 +48,16 @@ const EditReceiptForm = () => {
                     party_name: receipt.party_name || '',
                     amount: receipt.amount || '',
                     po_wo_no: receipt.po_wo_no || '',
+                    receipt_center: receipt.receipt_center || '',
+                    accounting_entry_type: receipt.accounting_entry_type || '',
+                    debit_to: receipt.debit_to || '',
+                    credit_to: receipt.credit_to || '',
+                    ledger_balance: receipt.ledger_balance || '',
+                    document_no: receipt.document_no || '',
+                    utr_imps_no: receipt.utr_imps_no || '',
                     remarks: receipt.remarks || ''
                 })
 
-                // Set existing PDF and MG remark
-                setExistingPDF(receipt.file_pdf || null)
                 setMgRemark(receipt.mg_remark || '')
                 setLoading(false)
             } catch (error) {
@@ -60,22 +70,6 @@ const EditReceiptForm = () => {
         fetchReceiptData()
     }, [id, navigate])
 
-    const handleFileChange = (e) => {
-        const selectedFile = e.target.files[0]
-        if (selectedFile && selectedFile.type === 'application/pdf') {
-            setFile(selectedFile)
-        } else {
-            toast.error('Please select a PDF file')
-            e.target.value = null
-        }
-    }
-
-    const viewExistingPDF = () => {
-        if (existingPDF) {
-            window.open(`${import.meta.env.VITE_PDF_URL}${existingPDF}`, '_blank')
-        }
-    }
-
     const handleSubmit = async (e) => {
         e.preventDefault()
 
@@ -86,23 +80,13 @@ const EditReceiptForm = () => {
 
         try {
             const token = localStorage.getItem('token')
-            const formData = new FormData()
-
-            // Backend will automatically change status from resubmit to pending
-            formData.append('data', JSON.stringify(receiptData))
-
-            // Add file if new one is uploaded
-            if (file) {
-                formData.append('file', file)
-            }
 
             await axios.put(
                 `${import.meta.env.VITE_BASE_URL}/receipts/${id}`,
-                formData,
+                receiptData,
                 {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'multipart/form-data'
+                        'Authorization': `Bearer ${token}`
                     }
                 }
             )
@@ -164,17 +148,17 @@ const EditReceiptForm = () => {
                     <div className={styles.formCard}>
                         <form onSubmit={handleSubmit}>
                             <div className="row g-3">
-                                <div className="col-md-6">
+                                <div className="col-md-4">
                                     <label className={styles.formLabel}>Receipt No *</label>
                                     <input
                                         type="text"
                                         className={styles.formInput}
                                         value={receiptData.receipt_no}
-                                        onChange={(e) => setReceiptData({ ...receiptData, receipt_no: e.target.value })}
-                                        required
+                                        readOnly
+                                        style={{ background: '#f9fafb', cursor: 'not-allowed' }}
                                     />
                                 </div>
-                                <div className="col-md-6">
+                                <div className="col-md-4">
                                     <label className={styles.formLabel}>Date *</label>
                                     <input
                                         type="date"
@@ -184,7 +168,7 @@ const EditReceiptForm = () => {
                                         required
                                     />
                                 </div>
-                                <div className="col-md-6">
+                                <div className="col-md-4">
                                     <label className={styles.formLabel}>Party Name *</label>
                                     <input
                                         type="text"
@@ -194,7 +178,10 @@ const EditReceiptForm = () => {
                                         required
                                     />
                                 </div>
-                                <div className="col-md-6">
+                            </div>
+
+                            <div className="row g-3 mt-2">
+                                <div className="col-md-4">
                                     <label className={styles.formLabel}>Amount *</label>
                                     <input
                                         type="number"
@@ -205,8 +192,8 @@ const EditReceiptForm = () => {
                                         required
                                     />
                                 </div>
-                                <div className="col-md-6">
-                                    <label className={styles.formLabel}>PO/WO No</label>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>PO/WO No.</label>
                                     <input
                                         type="text"
                                         className={styles.formInput}
@@ -214,7 +201,80 @@ const EditReceiptForm = () => {
                                         onChange={(e) => setReceiptData({ ...receiptData, po_wo_no: e.target.value })}
                                     />
                                 </div>
-                                <div className="col-md-6">
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Receipt Center</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={receiptData.receipt_center}
+                                        onChange={(e) => setReceiptData({ ...receiptData, receipt_center: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="row g-3 mt-2">
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Accounting Entry Type</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={receiptData.accounting_entry_type}
+                                        onChange={(e) => setReceiptData({ ...receiptData, accounting_entry_type: e.target.value })}
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Debit To</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={receiptData.debit_to}
+                                        onChange={(e) => setReceiptData({ ...receiptData, debit_to: e.target.value })}
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Credit To</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={receiptData.credit_to}
+                                        onChange={(e) => setReceiptData({ ...receiptData, credit_to: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="row g-3 mt-2">
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Ledger Balance</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        className={styles.formInput}
+                                        value={receiptData.ledger_balance}
+                                        onChange={(e) => setReceiptData({ ...receiptData, ledger_balance: e.target.value })}
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>Document No</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={receiptData.document_no}
+                                        onChange={(e) => setReceiptData({ ...receiptData, document_no: e.target.value })}
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className={styles.formLabel}>UTR/IMPS No.</label>
+                                    <input
+                                        type="text"
+                                        className={styles.formInput}
+                                        value={receiptData.utr_imps_no}
+                                        onChange={(e) => setReceiptData({ ...receiptData, utr_imps_no: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="row g-3 mt-2">
+                                <div className="col-md-12">
                                     <label className={styles.formLabel}>Remarks</label>
                                     <textarea
                                         className={styles.formInput}
@@ -223,48 +283,25 @@ const EditReceiptForm = () => {
                                         onChange={(e) => setReceiptData({ ...receiptData, remarks: e.target.value })}
                                     ></textarea>
                                 </div>
+                            </div>
 
-                                {/* Existing PDF */}
-                                {existingPDF && (
-                                    <div className="col-12">
-                                        <label className={styles.formLabel}>Current PDF</label>
-                                        <button
-                                            type="button"
-                                            onClick={viewExistingPDF}
-                                            className={styles.viewPdfButton}
-                                        >
-                                            <FileText size={18} />
-                                            View Current PDF
-                                        </button>
-                                    </div>
-                                )}
-
-                                {/* Upload New PDF */}
-                                <div className="col-12">
-                                    <label className={styles.formLabel}>
-                                        {existingPDF ? 'Upload New PDF (Optional - replaces current)' : 'Upload PDF'}
-                                    </label>
-                                    <div className={styles.fileUpload}>
-                                        <input
-                                            type="file"
-                                            accept=".pdf"
-                                            onChange={handleFileChange}
-                                            className={styles.fileInput}
-                                            id="pdfFile"
-                                        />
-                                        <label htmlFor="pdfFile" className={styles.fileLabel}>
-                                            <Upload size={20} />
-                                            {file ? file.name : 'Choose PDF file'}
-                                        </label>
-                                    </div>
-                                </div>
-
-                                {/* Submit Button */}
-                                <div className="col-12">
-                                    <button type="submit" className={styles.submitButton}>
-                                        Update and Resubmit for Approval
-                                    </button>
-                                </div>
+                            {/* Submit Button */}
+                            <div className="mt-4">
+                                <button
+                                    type="submit"
+                                    style={{
+                                        background: '#0C4379',
+                                        color: 'white',
+                                        border: 'none',
+                                        padding: '12px 32px',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        fontSize: '16px',
+                                        fontWeight: '500'
+                                    }}
+                                >
+                                    Update and Resubmit for Approval
+                                </button>
                             </div>
                         </form>
                     </div>

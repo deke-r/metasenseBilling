@@ -24,27 +24,7 @@ const ReceiptForm = () => {
         remarks: ''
     })
 
-    useEffect(() => {
-        const fetchNextReceiptNo = async () => {
-            try {
-                const token = localStorage.getItem('token')
-                const response = await axios.get(
-                    `${import.meta.env.VITE_BASE_URL}/receipts/next-number`,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    }
-                )
-                setReceiptData(prev => ({ ...prev, receipt_no: response.data.receipt_no }))
-            } catch (error) {
-                console.error('Error fetching receipt number:', error)
-                toast.error('Failed to fetch receipt number')
-            }
-        }
 
-        fetchNextReceiptNo()
-    }, [])
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -104,8 +84,9 @@ const ReceiptForm = () => {
                                         type="text"
                                         className={styles.formInput}
                                         value={receiptData.receipt_no}
-                                        readOnly
-                                        style={{ background: '#f9fafb', cursor: 'not-allowed' }}
+                                        onChange={(e) => setReceiptData({ ...receiptData, receipt_no: e.target.value })}
+                                        placeholder="Enter receipt number"
+                                        required
                                     />
                                 </div>
                                 <div className="col-md-4">

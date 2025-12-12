@@ -42,25 +42,13 @@
 }
 
 .navTabs .navLink {
-    border: none;
-    border-bottom: 2px solid transparent;
     color: #6b7280;
     font-weight: 500;
-    padding: 0.75rem 1.5rem;
     transition: all 0.2s;
-    background: transparent;
 }
 
 .navTabs .navLink:hover {
     color: #0C4379;
-    border-color: transparent;
-    background: transparent;
-}
-
-.navTabs .navLink.active {
-    color: #0C4379;
-    border-bottom-color: #0C4379;
-    background: transparent;
 }
 
 /* Filter Section */
