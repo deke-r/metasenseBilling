@@ -68,6 +68,9 @@ const Login = () => {
                 <div className="row justify-content-center">
                     <div className="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
                         <div className={styles.loginCard}>
+                            <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                                <img src="/img/logo.png" alt="Logo" className={styles.loginLogo} />
+                            </div>
                             <h1 className={styles.loginTitle}>Welcome Back</h1>
                             <p className={styles.loginSubtitle}>Sign in to your account</p>
 
@@ -144,6 +147,12 @@ const Login = () => {
                                 >
                                     {isSubmitting ? 'Signing in...' : 'Sign In'}
                                 </button>
+
+                                <div className="text-center mt-3">
+                                    <a href="#" onClick={(e) => { e.preventDefault(); navigate('/forgot-password') }} className={styles.forgotPasswordLink}>
+                                        Forgot Password?
+                                    </a>
+                                </div>
                             </form>
                         </div>
                     </div>

@@ -15,6 +15,9 @@ import EditPaymentForm from "./pages/EditPaymentForm";
 import EditReceiptForm from "./pages/EditReceiptForm";
 import EditAccountInvoiceForm from "./pages/EditAccountInvoiceForm";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ForgotPassword from "./pages/ForgotPassword";
+import VerifyOTP from "./pages/VerifyOTP";
+import ResetPassword from "./pages/ResetPassword";
 
 const App = () => {
   return (
@@ -22,6 +25,9 @@ const App = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route
             path="/dashboard/am"
             element={

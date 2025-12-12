@@ -129,6 +129,18 @@
     margin-top: 1rem;
 }
 
+.forgotPasswordLink {
+    color: #666;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.forgotPasswordLink:hover {
+    color: #0C4379;
+    text-decoration: underline;
+}
+
 .submitButton:hover {
     background: #0a3661;
 }
@@ -141,4 +153,11 @@
     opacity: 0.6;
     cursor: not-allowed;
     background: #0C4379;
+}
+
+.loginLogo {
+    max-width: 150px;
+    height: auto;
+    width: 100%;
+    object-fit: contain;
 }
