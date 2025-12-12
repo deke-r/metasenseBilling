@@ -36,4 +36,19 @@ export const isTokenValid = () => {
 
 export const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('lastLogin');
+};
+
+export const getUserRole = () => {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) return null;
+
+        const decodedToken = jwtDecode(token);
+        return decodedToken.role;
+    } catch (error) {
+        return null;
+    }
 };

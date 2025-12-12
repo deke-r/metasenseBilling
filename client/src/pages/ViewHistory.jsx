@@ -9,9 +9,9 @@ import toast, { Toaster } from 'react-hot-toast'
 const ViewHistory = () => {
     const navigate = useNavigate()
     const [activeTab, setActiveTab] = useState('payments')
-    const [statusFilter, setStatusFilter] = useState('approved')
+    const [statusFilter, setStatusFilter] = useState('all')
     const [fromDate, setFromDate] = useState('')
-    const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0])
+    const [toDate, setToDate] = useState('')
     const [payments, setPayments] = useState([])
     const [receipts, setReceipts] = useState([])
     const [accountInvoices, setAccountInvoices] = useState([])
@@ -21,32 +21,69 @@ const ViewHistory = () => {
     const [showOffcanvas, setShowOffcanvas] = useState(false)
 
     useEffect(() => {
-        if (fromDate && toDate) {
-            fetchData()
-        }
-    }, [activeTab, statusFilter, fromDate, toDate])
+        fetchData(true)
+    }, [activeTab])
 
-    const fetchData = async () => {
+    const fetchData = async (isInitialLoad = false) => {
         setLoading(true)
         try {
             const token = localStorage.getItem('token')
             const headers = { 'Authorization': `Bearer ${token}` }
 
+            // Build query params
+            let paymentsUrl = `${import.meta.env.VITE_BASE_URL}/payments`
+            let receiptsUrl = `${import.meta.env.VITE_BASE_URL}/receipts`
+            let invoicesUrl = `${import.meta.env.VITE_BASE_URL}/account-invoices`
+
+            // Add status filter if not 'all' and NOT initial load (or even for initial load if we want all)
+            // User requested "by default all should be selected".
+            if (!isInitialLoad && statusFilter !== 'all') {
+                paymentsUrl += `?status=${statusFilter}`
+                receiptsUrl += `?status=${statusFilter}`
+                invoicesUrl += `?status=${statusFilter}`
+            }
+
             const [paymentsRes, receiptsRes, invoicesRes] = await Promise.all([
-                axios.get(`${import.meta.env.VITE_BASE_URL}/payments?status=${statusFilter}`, { headers }),
-                axios.get(`${import.meta.env.VITE_BASE_URL}/receipts?status=${statusFilter}`, { headers }),
-                axios.get(`${import.meta.env.VITE_BASE_URL}/account-invoices?status=${statusFilter}`, { headers })
+                axios.get(paymentsUrl, { headers }),
+                axios.get(receiptsUrl, { headers }),
+                axios.get(invoicesUrl, { headers })
             ])
 
-            // Filter by date range
-            const filterByDate = (items) => items.filter(item => {
-                const itemDate = new Date(item.date)
-                return itemDate >= new Date(fromDate) && itemDate <= new Date(toDate)
-            })
+            // Filter logic
+            const processData = (items) => {
+                let processed = items
 
-            setPayments(filterByDate(paymentsRes.data))
-            setReceipts(filterByDate(receiptsRes.data))
-            setAccountInvoices(filterByDate(invoicesRes.data))
+                // Date filter only if dates provided
+                if (fromDate && toDate) {
+                    processed = processed.filter(item => {
+                        if (!item.date) return false
+                        const itemDate = new Date(item.date)
+
+                        // Parse inputs as active local day start/end
+                        const [startY, startM, startD] = fromDate.split('-').map(Number)
+                        const start = new Date(startY, startM - 1, startD, 0, 0, 0, 0)
+
+                        const [endY, endM, endD] = toDate.split('-').map(Number)
+                        const end = new Date(endY, endM - 1, endD, 23, 59, 59, 999)
+
+                        return itemDate >= start && itemDate <= end
+                    })
+                }
+
+                // If initial load and no search performed, get last 20
+                if (isInitialLoad && (!fromDate || !toDate)) {
+                    // Sort by date descending (though items might be by ID or creation, let's assume date or ID)
+                    // Assuming API returns data, we default to last 20.
+                    // We sort by date (newest first) then take top 20.
+                    processed = processed.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 20)
+                }
+
+                return processed
+            }
+
+            setPayments(processData(paymentsRes.data))
+            setReceipts(processData(receiptsRes.data))
+            setAccountInvoices(processData(invoicesRes.data))
             setLoading(false)
         } catch (error) {
             console.error('Error fetching data:', error)
@@ -55,18 +92,184 @@ const ViewHistory = () => {
         }
     }
 
-    const handleView = (item, type) => {
+    const handleSearch = () => {
+        if (fromDate && !toDate) {
+            toast.error('Please select To Date')
+            return
+        }
+        if (toDate && !fromDate) {
+            toast.error('Please select From Date')
+            return
+        }
+        fetchData(false)
+    }
+
+    const handleViewDetails = (item, type) => {
         setSelectedItem(item)
         setSelectedType(type)
         setShowOffcanvas(true)
     }
 
-    const viewPDF = () => {
-        if (selectedItem) {
-            const pdfFile = selectedItem.file_pdf || selectedItem.invoice_pdf_file
-            if (pdfFile) {
-                window.open(`${import.meta.env.VITE_PDF_URL}/${pdfFile}`, '_blank')
-            }
+    const viewPDF = (pdfPath) => {
+        if (pdfPath) {
+            window.open(`${import.meta.env.VITE_PDF_URL}${pdfPath}`, '_blank')
+        } else {
+            toast.error('No PDF available')
+        }
+    }
+
+    const renderDetailFields = () => {
+        if (!selectedItem) return null
+
+        if (selectedType === 'payments') {
+            return (
+                <div className={styles.detailGrid}>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Payment No</span>
+                        <div className={styles.detailValue}>{selectedItem.payment_no}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Date</span>
+                        <div className={styles.detailValue}>{new Date(selectedItem.date).toLocaleDateString('en-IN')}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Party Name</span>
+                        <div className={styles.detailValue}>{selectedItem.party_name}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Amount</span>
+                        <div className={styles.detailValue}>₹{parseFloat(selectedItem.amount).toLocaleString('en-IN')}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Transaction Type</span>
+                        <div className={styles.detailValue}>{selectedItem.transaction_type || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Category</span>
+                        <div className={styles.detailValue}>{selectedItem.payment_category || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Center</span>
+                        <div className={styles.detailValue}>{selectedItem.payment_center || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Debit To</span>
+                        <div className={styles.detailValue}>{selectedItem.debit_to || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Credit To</span>
+                        <div className={styles.detailValue}>{selectedItem.credit_to || '-'}</div>
+                    </div>
+                    <div className={`${styles.detailItem} ${styles.detailItemFull}`}>
+                        <span className={styles.detailLabel}>Remarks</span>
+                        <div className={styles.detailValue}>{selectedItem.remarks || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Created By</span>
+                        <div className={styles.detailValue}>{selectedItem.created_by_name}</div>
+                    </div>
+                    {selectedItem.mg_remark && (
+                        <div className={`${styles.detailItem} ${styles.detailItemFull}`}>
+                            <span className={styles.detailLabel}>Manager's Remark</span>
+                            <div className={styles.detailValue}>{selectedItem.mg_remark}</div>
+                        </div>
+                    )}
+                </div>
+            )
+        } else if (selectedType === 'receipts') {
+            return (
+                <div className={styles.detailGrid}>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Receipt No</span>
+                        <div className={styles.detailValue}>{selectedItem.receipt_no}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Date</span>
+                        <div className={styles.detailValue}>{new Date(selectedItem.date).toLocaleDateString('en-IN')}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Party Name</span>
+                        <div className={styles.detailValue}>{selectedItem.party_name}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Amount</span>
+                        <div className={styles.detailValue}>₹{parseFloat(selectedItem.amount).toLocaleString('en-IN')}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>PO/WO No</span>
+                        <div className={styles.detailValue}>{selectedItem.po_wo_no || '-'}</div>
+                    </div>
+                    <div className={`${styles.detailItem} ${styles.detailItemFull}`}>
+                        <span className={styles.detailLabel}>Remarks</span>
+                        <div className={styles.detailValue}>{selectedItem.remarks || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Created By</span>
+                        <div className={styles.detailValue}>{selectedItem.created_by_name}</div>
+                    </div>
+                    {selectedItem.mg_remark && (
+                        <div className={`${styles.detailItem} ${styles.detailItemFull}`}>
+                            <span className={styles.detailLabel}>Manager's Remark</span>
+                            <div className={styles.detailValue}>{selectedItem.mg_remark}</div>
+                        </div>
+                    )}
+                </div>
+            )
+        } else {
+            return (
+                <div className={styles.detailGrid}>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Invoice No</span>
+                        <div className={styles.detailValue}>{selectedItem.invoice_no}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Date</span>
+                        <div className={styles.detailValue}>{new Date(selectedItem.date).toLocaleDateString('en-IN')}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Party Name</span>
+                        <div className={styles.detailValue}>{selectedItem.party_name}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Amount</span>
+                        <div className={styles.detailValue}>₹{parseFloat(selectedItem.amount).toLocaleString('en-IN')}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>PO/WO No</span>
+                        <div className={styles.detailValue}>{selectedItem.po_wo_no || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Accounting Entry Type</span>
+                        <div className={styles.detailValue}>{selectedItem.accounting_entry_type || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Debit To</span>
+                        <div className={styles.detailValue}>{selectedItem.debit_to || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Credit To</span>
+                        <div className={styles.detailValue}>{selectedItem.credit_to || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Ledger Balance</span>
+                        <div className={styles.detailValue}>{selectedItem.ledger_balance || '-'}</div>
+                    </div>
+                    <div className={`${styles.detailItem} ${styles.detailItemFull}`}>
+                        <span className={styles.detailLabel}>Remarks</span>
+                        <div className={styles.detailValue}>{selectedItem.remarks || '-'}</div>
+                    </div>
+                    <div className={styles.detailItem}>
+                        <span className={styles.detailLabel}>Created By</span>
+                        <div className={styles.detailValue}>{selectedItem.created_by_name}</div>
+                    </div>
+                    {selectedItem.mg_remark && (
+                        <div className={`${styles.detailItem} ${styles.detailItemFull}`}>
+                            <span className={styles.detailLabel}>Manager's Remark</span>
+                            <div className={styles.detailValue}>{selectedItem.mg_remark}</div>
+                        </div>
+                    )}
+                </div>
+            )
         }
     }
 
@@ -82,14 +285,13 @@ const ViewHistory = () => {
                         <th>Category</th>
                         <th>Created By</th>
                         <th>Status</th>
-                        <th>Approved/Rejected By</th>
-                        <th>Approved/Rejected At</th>
-                        <th>Action</th>
+                        <th>Approved By</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {payments.length === 0 ? (
-                        <tr><td colSpan="10" className={styles.emptyState}>No {statusFilter} payments found</td></tr>
+                        <tr><td colSpan="9" className={styles.emptyState}>No payments found</td></tr>
                     ) : (
                         payments.map(payment => (
                             <tr key={payment.id}>
@@ -100,19 +302,22 @@ const ViewHistory = () => {
                                 <td>{payment.payment_category || '-'}</td>
                                 <td>{payment.created_by_name}</td>
                                 <td>
-                                    <span className={`${styles.badge} ${payment.status === 'approved' ? styles.badgeApproved : styles.badgeRejected}`}>
+                                    <span className={`${styles.badge} ${payment.status === 'approved' ? styles.badgeApproved :
+                                        payment.status === 'rejected' ? styles.badgeRejected :
+                                            payment.status === 'resubmit' ? styles.badgeResubmit :
+                                                styles.badgePending
+                                        }`}>
                                         {payment.status}
                                     </span>
                                 </td>
                                 <td>{payment.approved_by_name || '-'}</td>
-                                <td>{payment.approved_at ? new Date(payment.approved_at).toLocaleString('en-IN') : '-'}</td>
                                 <td>
                                     <button
-                                        onClick={() => handleView(payment, 'payment')}
                                         className={styles.btnView}
+                                        onClick={() => handleViewDetails(payment, 'payments')}
                                         title="View Details"
                                     >
-                                        <Eye size={18} />
+                                        <Eye size={16} />
                                     </button>
                                 </td>
                             </tr>
@@ -135,14 +340,13 @@ const ViewHistory = () => {
                         <th>PO/WO No</th>
                         <th>Created By</th>
                         <th>Status</th>
-                        <th>Approved/Rejected By</th>
-                        <th>Approved/Rejected At</th>
-                        <th>Action</th>
+                        <th>Approved By</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {receipts.length === 0 ? (
-                        <tr><td colSpan="10" className={styles.emptyState}>No {statusFilter} receipts found</td></tr>
+                        <tr><td colSpan="9" className={styles.emptyState}>No receipts found</td></tr>
                     ) : (
                         receipts.map(receipt => (
                             <tr key={receipt.id}>
@@ -153,19 +357,22 @@ const ViewHistory = () => {
                                 <td>{receipt.po_wo_no || '-'}</td>
                                 <td>{receipt.created_by_name}</td>
                                 <td>
-                                    <span className={`${styles.badge} ${receipt.status === 'approved' ? styles.badgeApproved : styles.badgeRejected}`}>
+                                    <span className={`${styles.badge} ${receipt.status === 'approved' ? styles.badgeApproved :
+                                        receipt.status === 'rejected' ? styles.badgeRejected :
+                                            receipt.status === 'resubmit' ? styles.badgeResubmit :
+                                                styles.badgePending
+                                        }`}>
                                         {receipt.status}
                                     </span>
                                 </td>
                                 <td>{receipt.approved_by_name || '-'}</td>
-                                <td>{receipt.approved_at ? new Date(receipt.approved_at).toLocaleString('en-IN') : '-'}</td>
                                 <td>
                                     <button
-                                        onClick={() => handleView(receipt, 'receipt')}
                                         className={styles.btnView}
+                                        onClick={() => handleViewDetails(receipt, 'receipts')}
                                         title="View Details"
                                     >
-                                        <Eye size={18} />
+                                        <Eye size={16} />
                                     </button>
                                 </td>
                             </tr>
@@ -188,14 +395,13 @@ const ViewHistory = () => {
                         <th>PO/WO No</th>
                         <th>Created By</th>
                         <th>Status</th>
-                        <th>Approved/Rejected By</th>
-                        <th>Approved/Rejected At</th>
-                        <th>Action</th>
+                        <th>Approved By</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {accountInvoices.length === 0 ? (
-                        <tr><td colSpan="10" className={styles.emptyState}>No {statusFilter} account invoices found</td></tr>
+                        <tr><td colSpan="9" className={styles.emptyState}>No account invoices found</td></tr>
                     ) : (
                         accountInvoices.map(invoice => (
                             <tr key={invoice.id}>
@@ -206,19 +412,22 @@ const ViewHistory = () => {
                                 <td>{invoice.po_wo_no || '-'}</td>
                                 <td>{invoice.created_by_name}</td>
                                 <td>
-                                    <span className={`${styles.badge} ${invoice.status === 'approved' ? styles.badgeApproved : styles.badgeRejected}`}>
+                                    <span className={`${styles.badge} ${invoice.status === 'approved' ? styles.badgeApproved :
+                                        invoice.status === 'rejected' ? styles.badgeRejected :
+                                            invoice.status === 'resubmit' ? styles.badgeResubmit :
+                                                styles.badgePending
+                                        }`}>
                                         {invoice.status}
                                     </span>
                                 </td>
                                 <td>{invoice.approved_by_name || '-'}</td>
-                                <td>{invoice.approved_at ? new Date(invoice.approved_at).toLocaleString('en-IN') : '-'}</td>
                                 <td>
                                     <button
-                                        onClick={() => handleView(invoice, 'accountInvoice')}
                                         className={styles.btnView}
+                                        onClick={() => handleViewDetails(invoice, 'account-invoices')}
                                         title="View Details"
                                     >
-                                        <Eye size={18} />
+                                        <Eye size={16} />
                                     </button>
                                 </td>
                             </tr>
@@ -257,8 +466,10 @@ const ViewHistory = () => {
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value)}
                                 >
+                                    <option value="all">All</option>
                                     <option value="approved">Approved</option>
                                     <option value="rejected">Rejected</option>
+                                    <option value="resubmit">Re-edit</option>
                                 </select>
                             </div>
                             <div className="col-md-3">
@@ -276,13 +487,14 @@ const ViewHistory = () => {
                                     type="date"
                                     className={styles.formInput}
                                     value={toDate}
+                                    min={fromDate}
                                     onChange={(e) => setToDate(e.target.value)}
                                 />
                             </div>
                             <div className="col-md-3 d-flex align-items-end">
                                 <button
                                     className={styles.searchButton}
-                                    onClick={fetchData}
+                                    onClick={handleSearch}
                                 >
                                     Search
                                 </button>
@@ -343,8 +555,8 @@ const ViewHistory = () => {
             >
                 <div className={`offcanvas-header ${styles.offcanvasHeader}`}>
                     <h5 className={`offcanvas-title ${styles.offcanvasTitle}`}>
-                        {selectedType === 'payment' ? 'Payment' :
-                            selectedType === 'receipt' ? 'Receipt' : 'Account Invoice'} Details
+                        {selectedType === 'payments' ? 'Payment' :
+                            selectedType === 'receipts' ? 'Receipt' : 'Account Invoice'} Details
                     </h5>
                     <button type="button" className="btn-close" onClick={() => setShowOffcanvas(false)}></button>
                 </div>
@@ -353,208 +565,7 @@ const ViewHistory = () => {
                         <>
                             {/* Details Section */}
                             <div className={styles.detailSection}>
-                                <div className={styles.detailsGrid}>
-                                    {/* Payment Details */}
-                                    {selectedType === 'payment' && (
-                                        <>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Payment No:</span>
-                                                <span className={styles.detailValue}>{selectedItem.payment_no}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Date:</span>
-                                                <span className={styles.detailValue}>{new Date(selectedItem.date).toLocaleDateString('en-IN')}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Party Name:</span>
-                                                <span className={styles.detailValue}>{selectedItem.party_name}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Amount:</span>
-                                                <span className={styles.detailValue}>₹{parseFloat(selectedItem.amount).toLocaleString('en-IN')}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Transaction Type:</span>
-                                                <span className={styles.detailValue}>{selectedItem.transaction_type || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Requested By:</span>
-                                                <span className={styles.detailValue}>{selectedItem.requested_by || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Payment Category:</span>
-                                                <span className={styles.detailValue}>{selectedItem.payment_category || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Payment Center:</span>
-                                                <span className={styles.detailValue}>{selectedItem.payment_center || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Accounting Entry Type:</span>
-                                                <span className={styles.detailValue}>{selectedItem.accounting_entry_type || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Debit To:</span>
-                                                <span className={styles.detailValue}>{selectedItem.debit_to || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Credit To:</span>
-                                                <span className={styles.detailValue}>{selectedItem.credit_to || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Ledger Balance:</span>
-                                                <span className={styles.detailValue}>{selectedItem.ledger_balance || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Total Budget:</span>
-                                                <span className={styles.detailValue}>{selectedItem.total_budget || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Available Budget:</span>
-                                                <span className={styles.detailValue}>{selectedItem.available_budget || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Document No:</span>
-                                                <span className={styles.detailValue}>{selectedItem.document_no || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>UTR/IMPS No:</span>
-                                                <span className={styles.detailValue}>{selectedItem.utr_imps_no || '-'}</span>
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {/* Receipt Details */}
-                                    {selectedType === 'receipt' && (
-                                        <>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Receipt No:</span>
-                                                <span className={styles.detailValue}>{selectedItem.receipt_no}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Date:</span>
-                                                <span className={styles.detailValue}>{new Date(selectedItem.date).toLocaleDateString('en-IN')}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Party Name:</span>
-                                                <span className={styles.detailValue}>{selectedItem.party_name}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Amount:</span>
-                                                <span className={styles.detailValue}>₹{parseFloat(selectedItem.amount).toLocaleString('en-IN')}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>PO/WO No:</span>
-                                                <span className={styles.detailValue}>{selectedItem.po_wo_no || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Receipt Center:</span>
-                                                <span className={styles.detailValue}>{selectedItem.receipt_center || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Accounting Entry Type:</span>
-                                                <span className={styles.detailValue}>{selectedItem.accounting_entry_type || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Debit To:</span>
-                                                <span className={styles.detailValue}>{selectedItem.debit_to || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Credit To:</span>
-                                                <span className={styles.detailValue}>{selectedItem.credit_to || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Ledger Balance:</span>
-                                                <span className={styles.detailValue}>{selectedItem.ledger_balance || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Document No:</span>
-                                                <span className={styles.detailValue}>{selectedItem.document_no || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>UTR/IMPS No:</span>
-                                                <span className={styles.detailValue}>{selectedItem.utr_imps_no || '-'}</span>
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {/* Account Invoice Details */}
-                                    {selectedType === 'accountInvoice' && (
-                                        <>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Invoice No:</span>
-                                                <span className={styles.detailValue}>{selectedItem.invoice_no}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Date:</span>
-                                                <span className={styles.detailValue}>{new Date(selectedItem.date).toLocaleDateString('en-IN')}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Party Name:</span>
-                                                <span className={styles.detailValue}>{selectedItem.party_name}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Amount:</span>
-                                                <span className={styles.detailValue}>₹{parseFloat(selectedItem.amount).toLocaleString('en-IN')}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>PO/WO No:</span>
-                                                <span className={styles.detailValue}>{selectedItem.po_wo_no || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Accounting Entry Type:</span>
-                                                <span className={styles.detailValue}>{selectedItem.accounting_entry_type || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Debit To:</span>
-                                                <span className={styles.detailValue}>{selectedItem.debit_to || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Credit To:</span>
-                                                <span className={styles.detailValue}>{selectedItem.credit_to || '-'}</span>
-                                            </div>
-                                            <div className={styles.detailItem}>
-                                                <span className={styles.detailLabel}>Ledger Balance:</span>
-                                                <span className={styles.detailValue}>{selectedItem.ledger_balance || '-'}</span>
-                                            </div>
-                                        </>
-                                    )}
-
-                                    {/* Common Fields */}
-                                    <div className={styles.detailItem}>
-                                        <span className={styles.detailLabel}>Remarks:</span>
-                                        <span className={styles.detailValue}>{selectedItem.remarks || '-'}</span>
-                                    </div>
-                                    <div className={styles.detailItem}>
-                                        <span className={styles.detailLabel}>Created By:</span>
-                                        <span className={styles.detailValue}>{selectedItem.created_by_name}</span>
-                                    </div>
-                                    <div className={styles.detailItem}>
-                                        <span className={styles.detailLabel}>Status:</span>
-                                        <span className={`${styles.badge} ${selectedItem.status === 'approved' ? styles.badgeApproved :
-                                            selectedItem.status === 'rejected' ? styles.badgeRejected :
-                                                styles.badgeResubmit
-                                            }`}>
-                                            {selectedItem.status}
-                                        </span>
-                                    </div>
-                                    <div className={styles.detailItem}>
-                                        <span className={styles.detailLabel}>Approved/Rejected By:</span>
-                                        <span className={styles.detailValue}>{selectedItem.approved_by_name || '-'}</span>
-                                    </div>
-                                    <div className={styles.detailItem}>
-                                        <span className={styles.detailLabel}>Approved/Rejected At:</span>
-                                        <span className={styles.detailValue}>{selectedItem.approved_at ? new Date(selectedItem.approved_at).toLocaleString('en-IN') : '-'}</span>
-                                    </div>
-
-                                    {/* Manager's Remark */}
-                                    {selectedItem.mg_remark && (
-                                        <div className={styles.detailItemFull}>
-                                            <span className={styles.detailLabel}>Manager's Remark:</span>
-                                            <span className={styles.detailValue}>{selectedItem.mg_remark}</span>
-                                        </div>
-                                    )}
-                                </div>
+                                {renderDetailFields()}
                             </div>
 
                             {/* PDF Button */}
@@ -562,7 +573,7 @@ const ViewHistory = () => {
                                 <div className={styles.detailSection}>
                                     <button
                                         className={styles.pdfButton}
-                                        onClick={viewPDF}
+                                        onClick={() => viewPDF(selectedItem.file_pdf || selectedItem.invoice_pdf_file)}
                                     >
                                         <FileText size={18} />
                                         View PDF Document
