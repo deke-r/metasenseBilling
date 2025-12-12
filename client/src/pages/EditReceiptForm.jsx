@@ -97,7 +97,8 @@ const EditReceiptForm = () => {
             }, 2000)
         } catch (error) {
             console.error('Error updating receipt:', error)
-            toast.error('Failed to update receipt')
+            const errorMessage = error.response?.data?.message || 'Failed to update receipt'
+            toast.error(errorMessage)
         }
     }
 

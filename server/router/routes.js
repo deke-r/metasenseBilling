@@ -396,6 +396,11 @@ router.post('/invoice/save', verifyToken, async (req, res) => {
     } catch (error) {
         await connection.rollback();
         console.error('Error saving invoice:', error);
+        if (error && error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({
+                message: "This Invoice Number already exists. Please use a unique Invoice Number."
+            });
+        }
         res.status(500).json({ message: "Internal server error" });
     } finally {
         connection.release();

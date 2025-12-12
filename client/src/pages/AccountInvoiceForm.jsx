@@ -146,7 +146,8 @@ const AccountInvoiceForm = () => {
             }, 2000)
         } catch (error) {
             console.error('Error submitting account invoice:', error)
-            toast.error('Failed to submit account invoice')
+            const errorMessage = error.response?.data?.message || 'Failed to submit account invoice'
+            toast.error(errorMessage)
         }
     }
 

@@ -358,7 +358,8 @@ const Invoice = () => {
             }, 2000)
         } catch (error) {
             console.error('Error saving invoice:', error)
-            toast.error('Failed to save invoice')
+            const errorMessage = error.response?.data?.message || 'Failed to save invoice'
+            toast.error(errorMessage)
         }
     }
 

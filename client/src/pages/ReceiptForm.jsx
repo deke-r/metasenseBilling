@@ -53,7 +53,8 @@ const ReceiptForm = () => {
             }, 2000)
         } catch (error) {
             console.error('Error submitting receipt:', error)
-            toast.error('Failed to submit receipt')
+            const errorMessage = error.response?.data?.message || 'Failed to submit receipt'
+            toast.error(errorMessage)
         }
     }
 

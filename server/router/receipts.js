@@ -131,6 +131,11 @@ router.post('/receipts', verifyToken, async (req, res) => {
         sendEmail(managerEmails, emailSubject, emailHtml);
     } catch (error) {
         console.error('Error creating receipt:', error);
+        if (error && error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({
+                message: "This Receipt Number already exists. Please use a unique Receipt Number."
+            });
+        }
         res.status(500).json({ message: "Internal server error" });
     }
 });

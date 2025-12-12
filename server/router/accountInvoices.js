@@ -156,6 +156,11 @@ router.post('/account-invoices', verifyToken, upload.single('file'), async (req,
         sendEmail(managerEmails, emailSubject, emailHtml);
     } catch (error) {
         console.error('Error creating account invoice:', error);
+        if (error && error.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({
+                message: "This Invoice Number already exists. Please use a unique Invoice Number."
+            });
+        }
         res.status(500).json({ message: "Internal server error" });
     }
 });

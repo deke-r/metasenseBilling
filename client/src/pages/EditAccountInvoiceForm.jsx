@@ -189,7 +189,8 @@ const EditAccountInvoiceForm = () => {
             }, 2000)
         } catch (error) {
             console.error('Error updating account invoice:', error)
-            toast.error('Failed to update account invoice')
+            const errorMessage = error.response?.data?.message || 'Failed to update account invoice'
+            toast.error(errorMessage)
         }
     }
 
