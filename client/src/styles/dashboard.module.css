@@ -1,0 +1,285 @@
+/* Dashboard Container */
+.dashboardContainer {
+    min-height: 100vh;
+    background: #fafafa;
+}
+
+/* Navbar Styles */
+.navbar {
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    padding: 1.2rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.brandText {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+.welcomeText {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+    font-weight: 400;
+}
+
+.userName {
+    color: #1f2937;
+    font-weight: 500;
+}
+
+.logoutBtn {
+    background: #1f2937;
+    border: none;
+    color: white;
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.logoutBtn:hover {
+    background: #374151;
+    color: white;
+}
+
+/* Main Content */
+.mainContent {
+    padding: 2.5rem 0;
+}
+
+.pageTitle {
+    color: #1f2937;
+    font-size: 1.875rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.75rem;
+}
+
+/* Stats Cards */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.statCard {
+    background: #ffffff;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+    border: 1px solid #f3f4f6;
+}
+
+.statCard:hover {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+    border-color: #e5e7eb;
+}
+
+.statIcon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    background: #f9fafb;
+    color: #4b5563;
+}
+
+.statIcon.lightGray {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.statIcon.mediumGray {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.statIcon.darkGray {
+    background: #d1d5db;
+    color: #1f2937;
+}
+
+.statLabel {
+    color: #9ca3af;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.statValue {
+    color: #1f2937;
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.statChange {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    color: #6b7280;
+    font-weight: 400;
+}
+
+.statChange.positive {
+    color: #4b5563;
+}
+
+.statChange.negative {
+    color: #9ca3af;
+}
+
+/* Quick Actions */
+.quickActions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    margin-top: 2rem;
+}
+
+.actionCard {
+    background: #ffffff;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #f3f4f6;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.actionCard:hover {
+    border-color: #e5e7eb;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+    text-decoration: none;
+    background: #fafafa;
+}
+
+.actionIcon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.5rem;
+    background: #f9fafb;
+    color: #4b5563;
+}
+
+.actionTitle {
+    color: #1f2937;
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.actionDescription {
+    color: #9ca3af;
+    font-size: 0.8rem;
+    margin: 0;
+    font-weight: 400;
+}
+
+/* Recent Activity Section */
+.activitySection {
+    background: #ffffff;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f3f4f6;
+}
+
+.sectionTitle {
+    color: #1f2937;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 0.75rem;
+}
+
+/* Table Styles */
+.activitySection table {
+    margin: 0;
+}
+
+.activitySection thead th {
+    background: #fafafa;
+    color: #6b7280;
+    font-weight: 500;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.activitySection tbody td {
+    padding: 0.875rem;
+    border-bottom: 1px solid #f3f4f6;
+    color: #4b5563;
+    font-size: 0.9rem;
+}
+
+.activitySection tbody tr:hover {
+    background: #fafafa;
+}
+
+/* Badge Overrides */
+.activitySection .badge {
+    border-radius: 0;
+    padding: 0.3rem 0.65rem;
+    font-weight: 500;
+    font-size: 0.75rem;
+}
+
+.activitySection .bg-success {
+    background-color: #1f2937 !important;
+}
+
+.activitySection .bg-warning {
+    background-color: #9ca3af !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .pageTitle {
+        font-size: 1.5rem;
+    }
+
+    .statsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .quickActions {
+        grid-template-columns: 1fr;
+    }
+
+    .brandText {
+        font-size: 1.25rem;
+    }
+
+    .welcomeText {
+        font-size: 0.8rem;
+    }
+
+    .activitySection {
+        padding: 1rem;
+    }
+
+    .mainContent {
+        padding: 1.5rem 0;
+    }
+}

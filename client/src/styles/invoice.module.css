@@ -1,0 +1,508 @@
+/* Invoice Container */
+.invoiceContainer {
+    min-height: 100vh;
+    background: #f9fafb;
+}
+
+/* Form Section */
+.formSection {
+    padding: 2rem 0;
+}
+
+.backButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #1f2937;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    transition: color 0.2s;
+}
+
+.backButton:hover {
+    color: #0C4379;
+}
+
+.pageTitle {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 2rem;
+}
+
+.formCard {
+    background: #ffffff;
+    padding: 2rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.sectionTitle {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.formSection {
+    margin-bottom: 2rem;
+}
+
+.formLabel {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.formInput {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #d1d5db;
+    font-size: 0.9rem;
+    color: #1f2937;
+    background: #ffffff;
+    transition: all 0.2s;
+}
+
+.formInput:focus {
+    outline: none;
+    border-color: #0C4379;
+    box-shadow: 0 0 0 3px rgba(12, 67, 121, 0.1);
+}
+
+.itemRow {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.itemRow:last-child {
+    border-bottom: none;
+}
+
+.addItemBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    background: #f3f4f6;
+    color: #1f2937;
+    border: 1px solid #d1d5db;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.addItemBtn:hover {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+}
+
+.removeBtn {
+    width: 100%;
+    padding: 0.625rem;
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.removeBtn:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
+.generateBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 2rem;
+    background: #1f2937;
+    color: #ffffff;
+    border: none;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 1rem;
+}
+
+.generateBtn:hover {
+    background: #0C4379;
+}
+
+/* Autocomplete Styles */
+.autocompleteWrapper {
+    position: relative;
+}
+
+.suggestionsList {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 2px;
+}
+
+.suggestionItem {
+    padding: 0.75rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.2s;
+}
+
+.suggestionItem:last-child {
+    border-bottom: none;
+}
+
+.suggestionItem:hover,
+.suggestionItemActive {
+    background: #f3f4f6;
+}
+
+.suggestionName {
+    font-weight: 500;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.suggestionDetails {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+/* Invoice Preview - Hidden on screen, visible on print */
+.invoicePreview {
+    display: none;
+}
+
+/* Invoice Page Styles */
+.invoicePage {
+    width: 210mm;
+    padding: 20mm 25mm;
+    background: #EDE8E1;
+    color: #1f2937;
+    font-family: Arial, sans-serif;
+}
+
+.invoiceHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 25px;
+}
+
+.logoSection {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    max-width: 60px;
+    height: auto;
+    object-fit: contain;
+}
+
+.companyBranding {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.brandName {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+    font-family: Arial, sans-serif;
+}
+
+.brandUrl {
+    font-size: 11px;
+    color: #4b5563;
+    font-family: Arial, sans-serif;
+}
+
+.invoiceTitle {
+    font-size: 48px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    font-family: Arial, sans-serif;
+    color: #1f2937;
+}
+
+.invoiceInfo {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+}
+
+.billedTo {
+    flex: 1;
+}
+
+.label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    font-family: Arial, sans-serif;
+}
+
+.clientName {
+    font-size: 16px;
+    font-weight: 400;
+    margin-bottom: 4px;
+    text-transform: capitalize;
+}
+
+.clientDetails {
+    font-size: 14px;
+    color: #4b5563;
+    margin-bottom: 2px;
+}
+
+.invoiceDetails {
+    text-align: right;
+}
+
+.invoiceNumber {
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.invoiceDate {
+    font-size: 14px;
+    color: #4b5563;
+}
+
+.itemsTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+}
+
+.itemsTable thead {
+    border-bottom: 1px solid #1f2937;
+}
+
+.itemsTable th {
+    padding: 10px 8px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: Arial, sans-serif;
+}
+
+.itemsTable th:last-child,
+.itemsTable td:last-child {
+    text-align: right;
+}
+
+.itemsTable tbody tr {
+    border-bottom: 1px solid #d1d5db;
+}
+
+.itemsTable td {
+    padding: 12px 8px;
+    font-size: 14px;
+}
+
+.totalsSection {
+    margin-left: auto;
+    width: 300px;
+    margin-bottom: 25px;
+}
+
+.totalRow {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 14px;
+}
+
+.totalRowFinal {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    font-size: 20px;
+    font-weight: 700;
+    border-top: 1px solid #1f2937;
+    margin-top: 6px;
+}
+
+.invoiceFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 30px;
+    page-break-inside: avoid;
+    margin-top: 20px;
+}
+
+.paymentInfo {
+    flex: 0 0 50%;
+    max-width: 50%;
+}
+
+.paymentLabel {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    font-family: Arial, sans-serif;
+}
+
+.paymentDetails {
+    font-size: 13px;
+    margin-bottom: 4px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.companyInfo {
+    flex: 0 0 45%;
+    max-width: 45%;
+    text-align: right;
+}
+
+.companyName {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1f2937;
+    font-family: Arial, sans-serif;
+    margin-bottom: 6px;
+    white-space: nowrap;
+}
+
+.companyDetails {
+    font-size: 12px;
+    color: #4b5563;
+    margin-top: 4px;
+    font-family: Arial, sans-serif;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    text-align: right;
+}
+
+.stampWrapper {
+    position: relative;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+    height: 100px;
+    /* Adjust based on image size */
+    width: 100%;
+}
+
+.stamp {
+    height: 100px;
+    width: auto;
+    object-fit: contain;
+    opacity: 0.8;
+}
+
+.signature {
+    position: absolute;
+    right: 20px;
+    /* Adjust to center over stamp */
+    bottom: 10px;
+    /* Adjust to center over stamp */
+    height: 60px;
+    /* Adjust based on signature size relative to stamp */
+    width: auto;
+    object-fit: contain;
+    z-index: 1;
+}
+
+.contactFooter {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-top: 30px;
+    padding: 15px 0;
+    border-top: 1px solid #d1d5db;
+    flex-wrap: wrap;
+}
+
+.contactItem {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #1f2937;
+    font-family: Arial, sans-serif;
+    white-space: nowrap;
+}
+
+.contactIcon {
+    font-size: 14px;
+}
+
+.contactIconImg {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+}
+
+/* Print Styles */
+@media print {
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
+    .formSection {
+        display: none !important;
+    }
+
+    .invoicePreview {
+        display: block !important;
+    }
+
+    .invoicePage {
+        width: 100%;
+        margin: 0;
+        padding: 20mm 25mm;
+        page-break-after: avoid;
+    }
+
+    .invoiceFooter {
+        page-break-inside: avoid;
+    }
+
+    /* Hide navbar on print */
+    nav {
+        display: none !important;
+    }
+}
+
+/* Responsive adjustments for form */
+@media (max-width: 768px) {
+    .formCard {
+        padding: 1.5rem;
+    }
+
+    .pageTitle {
+        font-size: 1.5rem;
+    }
+
+    .sectionTitle {
+        font-size: 1rem;
+    }
+}
